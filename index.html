@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURNO PROFES GINER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        /* Estilos de la Tabla Matriz */
+        .matrix-table { width: 100%; border-collapse: collapse; background-color: white; table-layout: fixed; font-size: 0.8rem; min-width: 600px; }
+        .matrix-table th, .matrix-table td { border: 1px solid #000; padding: 4px; vertical-align: top; word-wrap: break-word; }
+        .matrix-table th { font-weight: 600; text-align: left; }
+        .matrix-header-peach { background-color: #fcd5b4; text-align: center; font-weight: bold;} 
+        .matrix-header-green { background-color: #00b050; color: white; text-align: center !important; font-weight: bold; letter-spacing: 1px; }
+        .matrix-header-red { background-color: #c00000; color: white; text-align: center !important; font-weight: bold; letter-spacing: 1px; }
+        .matrix-title-row { background-color: #fcd5b4; text-align: center !important; font-weight: bold; font-size: 1rem; }
+        .time-col { width: 70px; background-color: #fcd5b4; font-weight: 600; text-align: center !important; vertical-align: middle !important; font-size: 0.75rem; }
+        
+        .driver-name { text-decoration: underline; font-weight: 600; color: #111827; }
+        .passenger-name { color: #374151; }
+        .unassigned-passenger { color: #ef4444; font-style: italic; font-weight: 600; background-color: #fef2f2; padding: 2px 4px; border-radius: 4px; border: 1px dashed #fca5a5; }
+
+        /* Prevención de zoom en móviles */
+        @media (max-width: 640px) {
+            input, select, button { font-size: 16px !important; }
+        }
+        
+        /* Checkbox modificado para días preferidos */
+        .day-checkbox-label { transition: all 0.2s; }
+        .day-checkbox:checked + .day-checkbox-label { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+    </style>
+</head>
+<body class="h-screen flex flex-col text-slate-800 overflow-hidden">
+
+    <header class="bg-white shadow-sm border-b border-slate-200 z-10 relative flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-col gap-2">
+            <!-- Fila Superior: Logotipo y Título de la App + Botones Principales Desktop -->
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600 flex items-center justify-center">
+                        <i class="fa-solid fa-car-side text-lg sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base sm:text-lg text-slate-800 leading-tight">TURNO PROFES GINER</h1>
+                        <p class="text-[10px] text-slate-400 hidden sm:block">Gestión inteligente de coches compartidos</p>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción en Pantallas Medianas/Grandes -->
+                <div class="hidden md:flex items-center gap-2">
+                    <button id="history-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap" title="Ver turnos archivados">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span>Historial</span>
+                    </button>
+                    <button id="generate-schedule-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Calcular</span>
+                    </button>
+                    <button id="export-jpg-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap hidden">
+                        <i class="fa-solid fa-camera"></i> <span>JPG</span>
+                    </button>
+                    <button id="export-word-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap hidden">
+                        <i class="fa-solid fa-file-word"></i> <span>Word</span>
+                    </button>
+                    <button id="clear-data-btn-desktop" class="text-slate-400 hover:text-red-600 p-2 rounded-lg transition-colors bg-slate-100 hover:bg-red-50" title="Borrar todos los datos">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+
+                <!-- Botón Papelera Móvil -->
+                <button id="clear-data-btn" class="md:hidden text-slate-400 hover:text-red-600 p-2 rounded-lg transition-colors bg-slate-100 hover:bg-red-50" title="Borrar todos los datos">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+
+            <!-- Fila Inferior: Campo de Texto del Nombre a Ancho Completo + Botones Móvil -->
+            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 pt-1 md:pt-0 border-t md:border-t-0 border-slate-100">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </span>
+                    <input type="text" id="group-title-input" placeholder="Nombre del turno (Ej: Turno 20: Torre de Pisa)" class="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50 focus:bg-white transition-all shadow-sm" value="Turno 20: Torre de Pisa">
+                </div>
+
+                <!-- Barra de Botones Móvil -->
+                <div class="flex md:hidden items-center gap-1.5 overflow-x-auto pb-0.5">
+                    <button id="history-btn-mobile" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span>Historial</span>
+                    </button>
+                    <button id="generate-schedule-btn-mobile" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Calcular</span>
+                    </button>
+                    <button id="export-jpg-btn-mobile" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1 whitespace-nowrap hidden">
+                        <i class="fa-solid fa-camera"></i> <span>JPG</span>
+                    </button>
+                    <button id="export-word-btn-mobile" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1 whitespace-nowrap hidden">
+                        <i class="fa-solid fa-file-word"></i> <span>Word</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex sm:hidden border-t border-slate-200 bg-slate-50">
+            <button id="mobile-tab-teachers" class="flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5">
+                <i class="fa-solid fa-users"></i> Plantilla (<span id="mobile-teacher-count">0</span>)
+            </button>
+            <button id="mobile-tab-schedule" class="flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5">
+                <i class="fa-solid fa-calendar-days"></i> Cuadrante
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col sm:flex-row overflow-hidden relative">
+        <aside id="aside-panel" class="w-full sm:w-80 bg-white border-r border-slate-200 flex flex-col h-full z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] flex-shrink-0">
+            <div class="p-3 sm:p-4 border-b border-slate-100 justify-between items-center bg-slate-50 hidden sm:flex">
+                <h2 class="font-semibold text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-users-gear text-slate-400"></i> Plantilla
+                </h2>
+                <span id="teacher-count" class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </div>
+            
+            <div id="teachers-list" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
+                <div id="empty-list-msg" class="text-center text-slate-400 text-sm py-8">
+                    <i class="fa-solid fa-user-plus text-3xl mb-3 opacity-30 block"></i>
+                    Añade profesores para empezar
+                </div>
+            </div>
+
+            <div class="p-3 sm:p-4 border-t border-slate-100 bg-white">
+                <button id="add-teacher-btn" class="w-full bg-slate-50 hover:bg-slate-100 text-indigo-700 border border-indigo-200 font-medium py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus"></i> Añadir Profesor
+                </button>
+            </div>
+        </aside>
+
+        <section id="schedule-section" class="flex-1 bg-slate-100 p-2 sm:p-8 overflow-y-auto overflow-x-auto relative hidden sm:block">
+            <div id="schedule-wrapper" class="w-full min-w-full sm:min-w-[800px] max-w-6xl mx-auto transition-all">
+                <div id="mobile-swipe-hint" class="sm:hidden mb-2 text-center text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5 bg-indigo-50/80 border border-indigo-100 py-1.5 rounded-lg hidden">
+                    <i class="fa-solid fa-arrows-left-right text-indigo-500"></i> Desliza horizontalmente para ver la tabla completa
+                </div>
+
+                <div id="capacity-warning-banner" class="hidden mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs flex items-start gap-2.5 shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base mt-0.5 flex-shrink-0"></i>
+                    <div>
+                        <span class="font-bold block mb-0.5">Aviso de Plazas Faltantes</span>
+                        <span id="capacity-warning-text">En algunos tramos no hay suficientes vehículos disponibles.</span>
+                    </div>
+                </div>
+
+                <div id="exportable-matrix" class="bg-white p-2 sm:p-10 rounded-xl shadow-sm border border-slate-200 overflow-x-auto hidden">
+                    <!-- Tabla inyectada por JS -->
+                </div>
+                
+                <div id="empty-schedule-msg" class="h-full flex flex-col items-center justify-center text-slate-400 mt-16 sm:mt-32 p-4">
+                    <div class="bg-white p-4 sm:p-6 rounded-full shadow-sm mb-4">
+                        <i class="fa-regular fa-calendar-days text-4xl sm:text-5xl text-slate-300"></i>
+                    </div>
+                    <p class="text-base sm:text-lg font-medium text-slate-500 text-center">No hay rutas calculadas</p>
+                    <p class="text-xs sm:text-sm mt-2 max-w-md text-center">Configura el horario de los profesores y haz clic en "Calcular" para generar el cuadrante semanal.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="teacher-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full h-full sm:h-auto sm:max-w-3xl sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
+                <h3 class="font-bold text-base sm:text-lg text-slate-800 flex items-center gap-2" id="modal-title">
+                    <i class="fa-solid fa-user-pen text-indigo-600"></i> Perfil Docente
+                </h3>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 w-8 h-8 flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                <input type="hidden" id="teacher-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div class="space-y-3 sm:space-y-4">
+                        <div>
+                            <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1">Nombre</label>
+                            <input type="text" id="teacher-name" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="Ej: JuanJe">
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-3 cursor-pointer bg-emerald-50 p-2.5 sm:p-3 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors">
+                                <input type="checkbox" id="teacher-is-active" class="w-5 h-5 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500" checked>
+                                <span class="font-medium text-emerald-800 text-xs sm:text-sm">Participa en el turno actualmente</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="teacher-has-car" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                            <span class="font-medium text-slate-700 text-xs sm:text-sm">Dispone de coche para turnos</span>
+                        </label>
+                        
+                        <div id="car-details-container" class="grid grid-cols-1 gap-3 sm:gap-4 mt-3 sm:mt-4 hidden transition-all">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Modelo</label>
+                                    <input type="text" id="teacher-car-model" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" placeholder="Ej: Seat León">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Plazas Libres</label>
+                                    <select id="teacher-car-seats" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+                                        <option value="1">1 plaza</option>
+                                        <option value="2">2 plazas</option>
+                                        <option value="3" selected>3 plazas (Max)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Días Preferidos</label>
+                                    <div class="flex gap-1 bg-white border border-slate-300 p-1 rounded-lg">
+                                        <!-- Checkboxes para días -->
+                                        <label class="flex-1 text-center cursor-pointer relative">
+                                            <input type="checkbox" value="Lunes" class="day-checkbox sr-only group-checkbox">
+                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">L</div>
+                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer relative">
+                                            <input type="checkbox" value="Martes" class="day-checkbox sr-only group-checkbox">
+                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">M</div>
+                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer relative">
+                                            <input type="checkbox" value="Miércoles" class="day-checkbox sr-only group-checkbox">
+                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">X</div>
+                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer relative">
+                                            <input type="checkbox" value="Jueves" class="day-checkbox sr-only group-checkbox">
+                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">J</div>
+                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer relative">
+                                            <input type="checkbox" value="Viernes" class="day-checkbox sr-only group-checkbox">
+                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">V</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide" title="Compañero con el que prefieres viajar">Comp. Preferente</label>
+                                    <select id="teacher-pref-companion" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+                                        <option value="">Cualquiera</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-slate-700 mb-2 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-regular fa-clock text-indigo-500"></i> Horario Semanal
+                    </h4>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                        <table class="w-full text-xs sm:text-sm text-left bg-white min-w-[480px]">
+                            <thead class="text-[10px] sm:text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-3 py-2 sm:px-4 sm:py-3 font-semibold">Días</th>
+                                    <th class="px-3 py-2 sm:px-4 sm:py-3 font-semibold">Hora de Entrada (Ida)</th>
+                                    <th class="px-3 py-2 sm:px-4 sm:py-3 font-semibold">Hora de Salida (Vuelta)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-tbody" class="divide-y divide-slate-100">
+                                <!-- Generado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 sm:gap-3 flex-shrink-0">
+                <button id="cancel-modal-btn" class="px-4 sm:px-5 py-2 text-xs sm:text-sm text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Cancelar</button>
+                <button id="save-teacher-btn" class="px-4 sm:px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i> Guardar Perfil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive text-indigo-600"></i> Turnos Archivados
+                </h3>
+                <button id="close-history-btn" class="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 w-8 h-8 flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 custom-scrollbar space-y-2 bg-slate-100" id="history-list"></div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-5 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-lg mb-1" id="confirm-modal-title">¿Estás seguro?</h3>
+            <p class="text-slate-500 text-xs mb-5" id="confirm-modal-text">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-2 justify-center">
+                <button id="confirm-modal-cancel" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">Cancelar</button>
+                <button id="confirm-modal-ok" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[80] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+        
+        // Tramos definidos (Recreo unificado con el resto)
+        const timeSlots = [
+            '8.15 - 9.15',
+            '9.15 - 10.15',
+            '10.15 - 11.15',
+            '11.15 - 11.45', // Recreo tratado como un turno normal
+            '11.45 - 12.45',
+            '12.45 - 13.45',
+            '13.45 - 14.45'
+        ];
+        
+        let teachers = JSON.parse(localStorage.getItem('carpool_teachers_v5')) || [];
+        let savedSchedules = JSON.parse(localStorage.getItem('carpool_schedules_history_v2')) || [];
+        let generatedMatrix = null;
+        let currentScheduleId = null;
+        let driverAssignments = {}; 
+        let pendingConfirmCallback = null;
+
+        const teachersListEl = document.getElementById('teachers-list');
+        const emptyListMsg = document.getElementById('empty-list-msg');
+        const teacherCountEl = document.getElementById('teacher-count');
+        const modal = document.getElementById('teacher-modal');
+        const scheduleTbody = document.getElementById('schedule-tbody');
+        const hasCarCheckbox = document.getElementById('teacher-has-car');
+        const carDetailsContainer = document.getElementById('car-details-container');
+        const exportableMatrix = document.getElementById('exportable-matrix');
+        const emptyScheduleMsg = document.getElementById('empty-schedule-msg');
+        const exportJpgBtn = document.getElementById('export-jpg-btn');
+        const exportWordBtn = document.getElementById('export-word-btn');
+        const historyModal = document.getElementById('history-modal');
+        const historyList = document.getElementById('history-list');
+
+        const setExportButtonsVisibility = (show) => {
+            const jpgBtns = document.querySelectorAll('#export-jpg-btn, #export-jpg-btn-mobile');
+            const wordBtns = document.querySelectorAll('#export-word-btn, #export-word-btn-mobile');
+            jpgBtns.forEach(b => b.classList.toggle('hidden', !show));
+            wordBtns.forEach(b => b.classList.toggle('hidden', !show));
+        };
+
+        const saveTeachers = () => localStorage.setItem('carpool_teachers_v5', JSON.stringify(teachers));
+        
+        const showToast = (message, type = 'success') => {
+            const toast = document.createElement('div');
+            const colorClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-800');
+            toast.className = `${colorClass} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-circle-xmark' : 'fa-info-circle')}"></i> <span class="text-xs sm:text-sm font-medium">${message}</span>`;
+            document.getElementById('toast-container').appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        function showCustomConfirm(title, text, onConfirm) {
+            document.getElementById('confirm-modal-title').innerText = title;
+            document.getElementById('confirm-modal-text').innerText = text;
+            pendingConfirmCallback = onConfirm;
+            const confirmModal = document.getElementById('confirm-modal');
+            confirmModal.classList.remove('hidden');
+            confirmModal.classList.add('flex');
+        }
+
+        document.getElementById('confirm-modal-cancel').addEventListener('click', () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('confirm-modal').classList.remove('flex');
+            pendingConfirmCallback = null;
+        });
+
+        document.getElementById('confirm-modal-ok').addEventListener('click', () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('confirm-modal').classList.remove('flex');
+            if (pendingConfirmCallback) pendingConfirmCallback();
+            pendingConfirmCallback = null;
+        });
+
+        function buildScheduleGrid() {
+            scheduleTbody.innerHTML = '';
+            let optionsHtml = `<option value="">-- No asiste --</option>`;
+            timeSlots.forEach(slot => { optionsHtml += `<option value="${slot}">${slot}</option>`; });
+
+            daysOfWeek.forEach(day => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-2 font-medium text-slate-700 border-r border-slate-100">${day}</td>
+                    <td class="px-4 py-2 border-r border-slate-100">
+                        <select id="entrada-${day}" class="w-full border border-slate-200 rounded-md text-sm py-1.5 px-2 outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 bg-slate-50 hover:bg-white transition-colors">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                    <td class="px-4 py-2">
+                        <select id="salida-${day}" class="w-full border border-slate-200 rounded-md text-sm py-1.5 px-2 outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 bg-slate-50 hover:bg-white transition-colors">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                `;
+                scheduleTbody.appendChild(tr);
+            });
+        }
+
+        hasCarCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) carDetailsContainer.classList.remove('hidden');
+            else carDetailsContainer.classList.add('hidden');
+        });
+
+        function openModal(teacherId = null) {
+            buildScheduleGrid();
+            
+            // Limpiar checkboxes
+            document.querySelectorAll('.group-checkbox').forEach(cb => cb.checked = false);
+
+            const companionSelect = document.getElementById('teacher-pref-companion');
+            companionSelect.innerHTML = '<option value="">Cualquiera</option>';
+            teachers.forEach(t => {
+                if(t.id !== teacherId && t.isActive !== false) {
+                    companionSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+                }
+            });
+
+            if (teacherId) {
+                const teacher = teachers.find(t => t.id === teacherId);
+                document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-user-pen text-indigo-600"></i> Editar Docente';
+                document.getElementById('teacher-id').value = teacher.id;
+                document.getElementById('teacher-name').value = teacher.name;
+                document.getElementById('teacher-is-active').checked = teacher.isActive !== false;
+                hasCarCheckbox.checked = teacher.hasCar;
+                document.getElementById('teacher-car-model').value = teacher.carModel || '';
+                document.getElementById('teacher-car-seats').value = teacher.seats || 3;
+                document.getElementById('teacher-pref-companion').value = teacher.preferredCompanion || '';
+                
+                if (teacher.preferredDays && Array.isArray(teacher.preferredDays)) {
+                    document.querySelectorAll('.group-checkbox').forEach(cb => {
+                        if (teacher.preferredDays.includes(cb.value)) cb.checked = true;
+                    });
+                }
+                
+                daysOfWeek.forEach(day => {
+                    if (teacher.schedule && teacher.schedule[day]) {
+                        document.getElementById(`entrada-${day}`).value = teacher.schedule[day].entrada || '';
+                        document.getElementById(`salida-${day}`).value = teacher.schedule[day].salida || '';
+                    }
+                });
+            } else {
+                document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-user-plus text-indigo-600"></i> Añadir Docente';
+                document.getElementById('teacher-id').value = '';
+                document.getElementById('teacher-name').value = '';
+                document.getElementById('teacher-is-active').checked = true;
+                hasCarCheckbox.checked = false;
+                document.getElementById('teacher-car-model').value = '';
+                document.getElementById('teacher-car-seats').value = '3';
+                document.getElementById('teacher-pref-companion').value = '';
+                
+                daysOfWeek.forEach(day => {
+                    document.getElementById(`entrada-${day}`).value = timeSlots[0];
+                    document.getElementById(`salida-${day}`).value = timeSlots[timeSlots.length - 1];
+                });
+            }
+            hasCarCheckbox.dispatchEvent(new Event('change'));
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('add-teacher-btn').addEventListener('click', () => openModal());
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+        document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+
+        document.getElementById('save-teacher-btn').addEventListener('click', () => {
+            const name = document.getElementById('teacher-name').value.trim();
+            if (!name) return showToast('El nombre es obligatorio', 'error');
+            
+            const id = document.getElementById('teacher-id').value || 't_' + Date.now();
+            const isActive = document.getElementById('teacher-is-active').checked;
+            const hasCar = hasCarCheckbox.checked;
+            const carModel = document.getElementById('teacher-car-model').value.trim();
+            const seats = parseInt(document.getElementById('teacher-car-seats').value);
+            const preferredCompanion = document.getElementById('teacher-pref-companion').value;
+            
+            const preferredDays = [];
+            document.querySelectorAll('.group-checkbox:checked').forEach(cb => preferredDays.push(cb.value));
+            
+            const schedule = {};
+            daysOfWeek.forEach(day => {
+                schedule[day] = {
+                    entrada: document.getElementById(`entrada-${day}`).value,
+                    salida: document.getElementById(`salida-${day}`).value
+                };
+            });
+
+            const teacherData = { id, name, isActive, hasCar, carModel, seats, preferredDays, preferredCompanion, schedule };
+            
+            const existingIndex = teachers.findIndex(t => t.id === id);
+            if (existingIndex >= 0) {
+                teachers[existingIndex] = teacherData;
+            } else {
+                teachers.push(teacherData);
+            }
+            
+            saveTeachers();
+            renderTeachers();
+            closeModal();
+            showToast('Perfil guardado correctamente');
+        });
+
+        document.getElementById('history-btn').addEventListener('click', () => {
+            renderHistory();
+            historyModal.classList.remove('hidden');
+            historyModal.classList.add('flex');
+        });
+        document.getElementById('close-history-btn').addEventListener('click', () => {
+            historyModal.classList.add('hidden');
+            historyModal.classList.remove('flex');
+        });
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            if (savedSchedules.length === 0) {
+                historyList.innerHTML = `<div class="text-center text-slate-400 py-10">No hay turnos archivados aún</div>`;
+                return;
+            }
+            savedSchedules.forEach(schedule => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 hover:shadow-sm transition-all group';
+                div.innerHTML = `
+                    <div class="flex-1 cursor-pointer overflow-hidden" onclick="loadArchivedSchedule('${schedule.id}')">
+                        <h4 class="font-semibold text-slate-700 text-sm truncate" title="${schedule.title}">${schedule.title}</h4>
+                        <span class="text-xs text-slate-400"><i class="fa-regular fa-clock"></i> ${schedule.date}</span>
+                    </div>
+                    <button onclick="deleteArchivedSchedule('${schedule.id}')" class="text-slate-300 hover:text-red-500 p-2 rounded hover:bg-red-50 transition-colors ml-2"><i class="fa-solid fa-trash"></i></button>
+                `;
+                historyList.appendChild(div);
+            });
+        }
+
+        window.loadArchivedSchedule = function(id) {
+            const schedule = savedSchedules.find(s => s.id === id);
+            if (schedule) {
+                currentScheduleId = id;
+                document.getElementById('group-title-input').value = schedule.title;
+                renderMatrixUI(schedule.matrixData);
+                historyModal.classList.add('hidden');
+                historyModal.classList.remove('flex');
+                showToast(`Cargado: ${schedule.title}`, 'info');
+                if (window.innerWidth < 640 && document.getElementById('mobile-tab-schedule')) {
+                    document.getElementById('mobile-tab-schedule').click();
+                }
+            }
+        };
+
+        window.deleteArchivedSchedule = function(id) {
+            showCustomConfirm('Borrar del historial', '¿Quieres eliminar permanentemente este turno guardado?', () => {
+                savedSchedules = savedSchedules.filter(s => s.id !== id);
+                localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
+                renderHistory();
+                showToast('Turno eliminado del historial');
+            });
+        };
+
+        const mobileTabTeachers = document.getElementById('mobile-tab-teachers');
+        const mobileTabSchedule = document.getElementById('mobile-tab-schedule');
+        const asidePanel = document.getElementById('aside-panel');
+        const scheduleSection = document.getElementById('schedule-section');
+
+        if (mobileTabTeachers && mobileTabSchedule) {
+            mobileTabTeachers.addEventListener('click', () => {
+                asidePanel.classList.remove('hidden');
+                scheduleSection.classList.add('hidden');
+                scheduleSection.classList.remove('block');
+                mobileTabTeachers.className = "flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5";
+                mobileTabSchedule.className = "flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5";
+            });
+
+            mobileTabSchedule.addEventListener('click', () => {
+                asidePanel.classList.add('hidden');
+                scheduleSection.classList.remove('hidden');
+                scheduleSection.classList.add('block');
+                mobileTabSchedule.className = "flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5";
+                mobileTabTeachers.className = "flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5";
+            });
+        }
+
+        document.getElementById('clear-data-btn-desktop')?.addEventListener('click', () => document.getElementById('clear-data-btn').click());
+
+        function renderTeachers() {
+            teachersListEl.innerHTML = '';
+            teacherCountEl.innerText = teachers.length;
+            if (document.getElementById('mobile-teacher-count')) document.getElementById('mobile-teacher-count').innerText = teachers.length;
+
+            if (teachers.length === 0) {
+                teachersListEl.appendChild(emptyListMsg);
+                emptyListMsg.classList.remove('hidden');
+                return;
+            }
+            emptyListMsg.classList.add('hidden');
+
+            teachers.forEach(teacher => {
+                const isInactive = teacher.isActive === false;
+                const div = document.createElement('div');
+                div.className = `bg-white border ${isInactive ? 'border-red-200 opacity-60' : 'border-slate-200'} rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow relative group`;
+                
+                let driveBadge = '';
+                if (isInactive) {
+                    driveBadge = `<span class="bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shadow-sm">Pausado</span>`;
+                } else if (teacher.hasCar) {
+                    const daysDriven = driverAssignments[teacher.id] || 0;
+                    const badgeColor = daysDriven >= 2 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700';
+                    driveBadge = `<span class="${badgeColor} text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shadow-sm" title="Días asignados para conducir">${daysDriven}/2 d</span>`;
+                }
+
+                let carInfo = teacher.hasCar 
+                    ? `<div class="text-xs text-slate-500 flex items-center gap-1.5 mt-1.5"><i class="fa-solid fa-car-side text-indigo-400"></i> ${teacher.carModel || 'Vehículo'} (${teacher.seats} plz)</div>`
+                    : `<div class="text-xs text-slate-400 flex items-center gap-1.5 mt-1.5"><i class="fa-solid fa-person-walking"></i> Sin coche</div>`;
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center">${teacher.name} ${driveBadge}</h4>
+                            ${carInfo}
+                        </div>
+                        <div class="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-slate-50 rounded-lg p-1 border border-slate-100">
+                            <button onclick="openModal('${teacher.id}')" class="text-slate-400 hover:text-indigo-600 p-1 rounded hover:bg-indigo-50"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                teachersListEl.appendChild(div);
+            });
+        }
+
+        window.deleteTeacher = function(id) {
+            showCustomConfirm('Eliminar Profesor', '¿Seguro que quieres eliminar este docente de la plantilla?', () => {
+                teachers = teachers.filter(t => t.id !== id);
+                saveTeachers();
+                renderTeachers();
+                showToast('Profesor eliminado');
+            });
+        };
+
+        document.getElementById('clear-data-btn').addEventListener('click', () => {
+            showCustomConfirm('Borrar Todos los Datos', 'Esto eliminará todos los profesores y limpiará el cuadrante actual. ¿Deseas continuar?', () => {
+                teachers = [];
+                driverAssignments = {};
+                generatedMatrix = null;
+                saveTeachers();
+                renderTeachers();
+                exportableMatrix.innerHTML = '';
+                exportableMatrix.classList.add('hidden');
+                emptyScheduleMsg.classList.remove('hidden');
+                setExportButtonsVisibility(false);
+                document.getElementById('capacity-warning-banner').classList.add('hidden');
+                showToast('Se han borrado los datos');
+            });
+        });
+
+        function generateSchedule() {
+            const activeTeachers = teachers.filter(t => t.isActive !== false);
+            if (activeTeachers.length === 0) return showToast('Añade o activa profesores para calcular', 'error');
+
+            driverAssignments = {};
+            let driverScheduleByDay = { 'Lunes': [], 'Martes': [], 'Miércoles': [], 'Jueves': [], 'Viernes': [] };
+            let potentialDrivers = activeTeachers.filter(t => t.hasCar);
+            potentialDrivers.forEach(t => driverAssignments[t.id] = 0);
+
+            // PRIORIDAD 1: Aislamiento (Solos)
+            daysOfWeek.forEach(day => {
+                ['entrada', 'salida'].forEach(type => {
+                    timeSlots.forEach(slot => {
+                        let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
+                        if (peopleInSlot.length === 1) {
+                            let loneTeacher = peopleInSlot[0];
+                            if (loneTeacher.hasCar && !driverScheduleByDay[day].includes(loneTeacher.id) && (driverAssignments[loneTeacher.id] || 0) < 2) {
+                                driverScheduleByDay[day].push(loneTeacher.id);
+                                driverAssignments[loneTeacher.id] = (driverAssignments[loneTeacher.id] || 0) + 1;
+                            }
+                        }
+                    });
+                });
+            });
+
+            // PRIORIDAD 2: Días Preferidos marcados en el perfil de cada docente
+            potentialDrivers.forEach(driver => {
+                if (driver.preferredDays && Array.isArray(driver.preferredDays)) {
+                    driver.preferredDays.forEach(prefDay => {
+                        if ((driverAssignments[driver.id] || 0) < 2) {
+                            const travelsOnPrefDay = driver.schedule[prefDay] && (driver.schedule[prefDay].entrada || driver.schedule[prefDay].salida);
+                            if (travelsOnPrefDay && !driverScheduleByDay[prefDay].includes(driver.id)) {
+                                driverScheduleByDay[prefDay].push(driver.id);
+                                driverAssignments[driver.id] = (driverAssignments[driver.id] || 0) + 1;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // PRIORIDAD 3: Rescate de Plazas (Si faltan plazas en un tramo)
+            daysOfWeek.forEach(day => {
+                let capacityDeficit = true;
+                let rescueAttempts = 0;
+
+                while (capacityDeficit && rescueAttempts < 10) {
+                    capacityDeficit = false;
+                    rescueAttempts++;
+
+                    ['entrada', 'salida'].forEach(type => {
+                        timeSlots.forEach(slot => {
+                            let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
+                            if (peopleInSlot.length === 0) return;
+
+                            let currentDrivers = peopleInSlot.filter(t => driverScheduleByDay[day].includes(t.id));
+                            let availableSeats = currentDrivers.reduce((sum, d) => sum + Number(d.seats || 3), 0);
+                            let passengersCount = peopleInSlot.length - currentDrivers.length;
+
+                            if (passengersCount > availableSeats) {
+                                let carOwnersStandingBy = peopleInSlot.filter(t => 
+                                    t.hasCar && 
+                                    !driverScheduleByDay[day].includes(t.id) &&
+                                    (driverAssignments[t.id] || 0) < 2 
+                                );
+                                
+                                if (carOwnersStandingBy.length > 0) {
+                                    // Priorizar a quien prefiera este día, y de forma secundaria a quien lleve menos días
+                                    carOwnersStandingBy.sort((a, b) => {
+                                        const aPref = a.preferredDays && a.preferredDays.includes(day) ? 1 : 0;
+                                        const bPref = b.preferredDays && b.preferredDays.includes(day) ? 1 : 0;
+                                        if (aPref !== bPref) return bPref - aPref;
+                                        return (driverAssignments[a.id] || 0) - (driverAssignments[b.id] || 0);
+                                    });
+
+                                    let rescuedDriver = carOwnersStandingBy[0];
+                                    driverScheduleByDay[day].push(rescuedDriver.id);
+                                    driverAssignments[rescuedDriver.id] = (driverAssignments[rescuedDriver.id] || 0) + 1;
+                                    capacityDeficit = true; 
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            // PRIORIDAD 4: Relleno Rotativo de días restantes hasta el límite de 2 días
+            let dayQueue = [...daysOfWeek, ...daysOfWeek, ...daysOfWeek];
+            let dayIdx = 0;
+
+            potentialDrivers.forEach(driver => {
+                let attempts = 0;
+                while ((driverAssignments[driver.id] || 0) < 2 && attempts < 30) {
+                    let d = dayQueue[dayIdx % dayQueue.length];
+                    if (driver.schedule[d] && (driver.schedule[d].entrada || driver.schedule[d].salida)) {
+                        if (!driverScheduleByDay[d].includes(driver.id)) {
+                            driverScheduleByDay[d].push(driver.id);
+                            driverAssignments[driver.id] = (driverAssignments[driver.id] || 0) + 1;
+                        }
+                    }
+                    dayIdx++;
+                    attempts++;
+                }
+            });
+
+            // FASE DE DISTRIBUCIÓN
+            let matrixData = { entrada: {}, salida: {} };
+            let globalUnassignedCount = 0;
+            
+            timeSlots.forEach(slot => {
+                matrixData.entrada[slot] = {};
+                matrixData.salida[slot] = {};
+                daysOfWeek.forEach(day => {
+                    matrixData.entrada[slot][day] = [];
+                    matrixData.salida[slot][day] = [];
+                });
+            });
+
+            daysOfWeek.forEach(day => {
+                const driversToday = driverScheduleByDay[day]; 
+
+                const distributeSlot = (type) => {
+                    timeSlots.forEach(slot => {
+                        let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
+                        if (peopleInSlot.length === 0) return;
+
+                        let availableDriversInSlot = peopleInSlot.filter(t => driversToday.includes(t.id));
+                        let passengers = peopleInSlot.filter(t => !driversToday.includes(t.id));
+
+                        let slotCars = availableDriversInSlot.map(d => ({
+                            driver: d.name, driverId: d.id, capacity: Number(d.seats || 3), passengers: [], prefCompanion: d.preferredCompanion
+                        }));
+
+                        let unassignedPassengers = [];
+
+                        // Asignación de Compañeros Preferidos
+                        passengers.forEach(p => {
+                            let assigned = false;
+                            let preferredCar = slotCars.find(c => c.driverId === p.preferredCompanion && c.passengers.length < c.capacity);
+                            if (!preferredCar) preferredCar = slotCars.find(c => c.prefCompanion === p.id && c.passengers.length < c.capacity);
+
+                            if (preferredCar) {
+                                preferredCar.passengers.push(p.name);
+                                assigned = true;
+                            }
+                            if (!assigned) unassignedPassengers.push(p);
+                        });
+
+                        // Reparto Equitativo Restante
+                        unassignedPassengers.forEach(p => {
+                            slotCars.sort((a, b) => a.passengers.length - b.passengers.length);
+                            let carWithSpace = slotCars.find(c => c.passengers.length < c.capacity);
+                            if (carWithSpace) {
+                                carWithSpace.passengers.push(p.name);
+                            } else {
+                                slotCars.push({ driver: null, driverId: null, capacity: 0, passengers: [p.name] });
+                            }
+                        });
+                        matrixData[type][slot][day] = slotCars;
+                    });
+                };
+                distributeSlot('entrada');
+                distributeSlot('salida');
+            });
+
+            // Archivar Turno
+            const titleInput = document.getElementById('group-title-input');
+            const title = titleInput.value.trim() || `Turno ${new Date().toLocaleDateString('es-ES')}`;
+            titleInput.value = title;
+            
+            const existingIndex = savedSchedules.findIndex(s => s.title.toLowerCase() === title.toLowerCase());
+            const newSchedule = {
+                id: existingIndex >= 0 ? savedSchedules[existingIndex].id : Date.now().toString(),
+                title: title,
+                date: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
+                matrixData: matrixData
+            };
+            currentScheduleId = newSchedule.id;
+            
+            if (existingIndex >= 0) savedSchedules[existingIndex] = newSchedule;
+            else savedSchedules.unshift(newSchedule);
+            
+            localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
+
+            renderMatrixUI(matrixData);
+            renderTeachers(); 
+            showToast('Cuadrante calculado con éxito');
+            
+            if (window.innerWidth < 640 && mobileTabSchedule) mobileTabSchedule.click();
+        }
+
+        function renderMatrixUI(data) {
+            generatedMatrix = data;
+            let globalUnassignedCount = 0;
+            const groupTitle = document.getElementById('group-title-input').value || 'Turno: Sin Título';
+            
+            let html = `
+                <table class="matrix-table" id="capture-table">
+                    <thead>
+                        <tr><td colspan="6" class="matrix-title-row font-handwriting py-2">${groupTitle}</td></tr>
+                        <tr>
+                            <th class="matrix-header-peach py-2">Hora</th>
+                            <th class="matrix-header-peach py-2">Lunes</th>
+                            <th class="matrix-header-peach py-2">Martes</th>
+                            <th class="matrix-header-peach py-2">Miércoles</th>
+                            <th class="matrix-header-peach py-2">Jueves</th>
+                            <th class="matrix-header-peach py-2">Viernes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="matrix-header-green py-1">ENTRADA</td></tr>
+            `;
+
+            const renderCell = (cars, type, slot, day) => {
+                if (!cars || cars.length === 0) return '';
+                return cars.map((car, carIndex) => {
+                    if (car.driver) {
+                        const safeDriver = car.driver.replace(/'/g, "\\'");
+                        let paxHtml = car.passengers.map(p => {
+                            const safeP = p.replace(/'/g, "\\'");
+                            return `<span class="passenger-name cursor-pointer hover:text-indigo-600 hover:underline transition-colors" onclick="toggleRole('${type}', '${slot}', '${day}', ${carIndex}, '${safeP}')" title="Click para hacer conductor">${p}</span>`;
+                        }).join(', ');
+                        let paxStr = car.passengers.length > 0 ? `: ${paxHtml}` : '';
+                        return `<div class="mb-1"><span class="driver-name cursor-pointer hover:text-indigo-600 hover:underline transition-colors" onclick="toggleRole('${type}', '${slot}', '${day}', ${carIndex}, '${safeDriver}')" title="Click para hacer pasajero">${car.driver}</span>${paxStr}</div>`;
+                    } else {
+                        globalUnassignedCount += car.passengers.length;
+                        let paxHtml = car.passengers.map(p => {
+                            const safeP = p.replace(/'/g, "\\'");
+                            return `<span class="cursor-pointer hover:text-red-700 underline decoration-dashed underline-offset-2 transition-colors" onclick="toggleRole('${type}', '${slot}', '${day}', ${carIndex}, '${safeP}')" title="Click para asignar como conductor">${p}</span>`;
+                        }).join(', ');
+                        return `<div class="mb-1 unassigned-passenger"><i class="fa-solid fa-circle-exclamation mr-1"></i>Sin coche: ${paxHtml}</div>`;
+                    }
+                }).join('');
+            };
+
+            // Todas las franjas horarias procesadas de la misma manera (incluido el Recreo)
+            timeSlots.forEach(slot => {
+                html += `<tr><td class="time-col font-medium">${slot}</td>`;
+                daysOfWeek.forEach(day => { html += `<td>${renderCell(data.entrada[slot][day], 'entrada', slot, day)}</td>`; });
+                html += `</tr>`;
+            });
+
+            html += `<tr><td colspan="6" class="matrix-header-red py-1">SALIDA</td></tr>`;
+
+            timeSlots.forEach(slot => {
+                html += `<tr><td class="time-col font-medium">${slot}</td>`;
+                daysOfWeek.forEach(day => { html += `<td>${renderCell(data.salida[slot][day], 'salida', slot, day)}</td>`; });
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table>`;
+
+            exportableMatrix.innerHTML = html;
+            exportableMatrix.classList.remove('hidden');
+            emptyScheduleMsg.classList.add('hidden');
+            setExportButtonsVisibility(true);
+            if (document.getElementById('mobile-swipe-hint')) document.getElementById('mobile-swipe-hint').classList.remove('hidden');
+
+            const warningBanner = document.getElementById('capacity-warning-banner');
+            if (globalUnassignedCount > 0) {
+                warningBanner.classList.remove('hidden');
+                document.getElementById('capacity-warning-text').innerText = `Se han detectado ${globalUnassignedCount} casos sin vehículo por falta física de plazas.`;
+            } else {
+                warningBanner.classList.add('hidden');
+            }
+        }
+
+        window.toggleRole = function(type, slot, day, carIndex, personName) {
+            if (!generatedMatrix) return;
+
+            // Identificar el coche afectado
+            const targetCars = generatedMatrix[type] && generatedMatrix[type][slot] && generatedMatrix[type][slot][day];
+            if (!targetCars || !targetCars[carIndex]) return;
+
+            const targetCar = targetCars[carIndex];
+            const isDriver = (targetCar.driver === personName);
+
+            let newDriverName = null;
+            let oldDriverName = targetCar.driver;
+
+            if (isDriver) {
+                // El conductor cede el volante: se busca un sustituto entre los pasajeros del coche que tenga vehículo
+                if (targetCar.passengers && targetCar.passengers.length > 0) {
+                    const passengerWithCar = targetCar.passengers.find(pName => {
+                        const t = teachers.find(teacher => teacher.name === pName);
+                        return t && t.hasCar;
+                    });
+                    newDriverName = passengerWithCar || null;
+                } else {
+                    newDriverName = null;
+                }
+            } else {
+                // Un pasajero pasa a ser el conductor
+                newDriverName = personName;
+            }
+
+            ['entrada', 'salida'].forEach(t => {
+                timeSlots.forEach(s => {
+                    const cars = generatedMatrix[t] && generatedMatrix[t][s] && generatedMatrix[t][s][day];
+                    if (!cars || cars.length === 0) return;
+
+                    cars.forEach(car => {
+                        const belongsToGroup = (oldDriverName && car.driver === oldDriverName) ||
+                                               (car.driver === personName) ||
+                                               (car.passengers && (car.passengers.includes(personName) || (oldDriverName && car.passengers.includes(oldDriverName))));
+
+                        if (belongsToGroup) {
+                            let allPeople = [];
+                            if (car.driver) allPeople.push(car.driver);
+                            if (car.passengers) allPeople.push(...car.passengers);
+                            allPeople = [...new Set(allPeople)];
+
+                            if (newDriverName && allPeople.includes(newDriverName)) {
+                                const teacherObj = teachers.find(t => t.name === newDriverName);
+                                car.driver = newDriverName;
+                                car.driverId = teacherObj ? teacherObj.id : ('manual_' + newDriverName);
+                                car.capacity = teacherObj ? Number(teacherObj.seats || 3) : 3;
+
+                                const remainingPassengers = allPeople.filter(p => p !== newDriverName);
+                                car.passengers = remainingPassengers.slice(0, car.capacity);
+                                const overflow = remainingPassengers.slice(car.capacity);
+
+                                if (overflow.length > 0) {
+                                    cars.push({
+                                        driver: null,
+                                        driverId: null,
+                                        capacity: 0,
+                                        passengers: overflow
+                                    });
+                                }
+                            } else {
+                                car.driver = null;
+                                car.driverId = null;
+                                car.capacity = 0;
+                                car.passengers = allPeople;
+                            }
+                        }
+                    });
+
+                    // Regla de reacomodo: añadir a los profesores sin vehículo a otros coches con plazas libres en ese tramo
+                    let activeCars = cars.filter(c => c.driver !== null);
+                    let unassignedGroups = cars.filter(c => c.driver === null);
+
+                    if (unassignedGroups.length > 0 && activeCars.length > 0) {
+                        let strandedPeople = [];
+                        unassignedGroups.forEach(ug => {
+                            if (ug.passengers) strandedPeople.push(...ug.passengers);
+                        });
+                        strandedPeople = [...new Set(strandedPeople)];
+
+                        let remainingStranded = [];
+
+                        strandedPeople.forEach(person => {
+                            activeCars.sort((a, b) => a.passengers.length - b.passengers.length);
+                            let availableCar = activeCars.find(c => c.passengers.length < c.capacity);
+
+                            if (availableCar) {
+                                if (!availableCar.passengers.includes(person)) {
+                                    availableCar.passengers.push(person);
+                                }
+                            } else {
+                                remainingStranded.push(person);
+                            }
+                        });
+
+                        let newCarsList = [...activeCars];
+                        if (remainingStranded.length > 0) {
+                            newCarsList.push({
+                                driver: null,
+                                driverId: null,
+                                capacity: 0,
+                                passengers: remainingStranded
+                            });
+                        }
+                        generatedMatrix[t][s][day] = newCarsList;
+                    } else {
+                        generatedMatrix[t][s][day] = cars.filter(c => c.driver !== null || (c.passengers && c.passengers.length > 0));
+                    }
+                });
+            });
+
+            renderMatrixUI(generatedMatrix);
+            window.updateActiveScheduleInHistory();
+        };
+
+        window.updateActiveScheduleInHistory = function() {
+            if (!currentScheduleId) return;
+            const index = savedSchedules.findIndex(s => s.id === currentScheduleId);
+            if (index >= 0) {
+                savedSchedules[index].matrixData = generatedMatrix;
+                savedSchedules[index].title = document.getElementById('group-title-input').value.trim();
+                localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
+            }
+        };
+
+        // Guardar también si cambian manualmente el título del turno
+        document.getElementById('group-title-input').addEventListener('change', window.updateActiveScheduleInHistory);
+
+        document.getElementById('generate-schedule-btn').addEventListener('click', generateSchedule);
+
+        // Enlaces de eventos para botones móviles
+        document.getElementById('history-btn-mobile')?.addEventListener('click', () => document.getElementById('history-btn').click());
+        document.getElementById('generate-schedule-btn-mobile')?.addEventListener('click', () => document.getElementById('generate-schedule-btn').click());
+        document.getElementById('export-jpg-btn-mobile')?.addEventListener('click', () => document.getElementById('export-jpg-btn').click());
+        document.getElementById('export-word-btn-mobile')?.addEventListener('click', () => document.getElementById('export-word-btn').click());
+
+        exportJpgBtn.addEventListener('click', async () => {
+            const tableElement = document.getElementById('capture-table');
+            if (!tableElement) return;
+
+            const wrapper = document.getElementById('exportable-matrix');
+            const originalStyle = wrapper.style.cssText;
+            
+            // Forzamos un ancho comprimido para que la foto quede cuadrada y no estirada
+            wrapper.style.width = '750px'; 
+            wrapper.style.minWidth = '750px'; 
+            wrapper.style.padding = '0'; 
+            wrapper.style.overflow = 'visible';
+            
+            showToast('Generando imagen JPG...', 'info');
+
+            try {
+                const canvas = await html2canvas(tableElement, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+                wrapper.style.cssText = originalStyle;
+                const link = document.createElement('a');
+                link.download = `Carpool_Semanal_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+                showToast('¡Horario exportado con éxito!');
+            } catch (err) {
+                console.error(err);
+                showToast('Hubo un error al exportar la imagen', 'error');
+                wrapper.style.cssText = originalStyle;
+            }
+        });
+
+        exportWordBtn.addEventListener('click', () => {
+            const tableElement = document.getElementById('capture-table');
+            if (!tableElement) return;
+            showToast('Generando documento Word...', 'info');
+
+            const styles = `
+                <style>
+                    table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif, Arial; font-size: 11px; }
+                    th, td { border: 1px solid #000000; padding: 4px; vertical-align: top; text-align: left; }
+                    .matrix-header-peach { background-color: #fcd5b4; text-align: center; font-weight: bold; }
+                    .matrix-header-green { background-color: #00b050; color: white; text-align: center; font-weight: bold; }
+                    .matrix-header-red { background-color: #c00000; color: white; text-align: center; font-weight: bold; }
+                    .matrix-title-row { background-color: #fcd5b4; text-align: center; font-weight: bold; font-size: 14px; }
+                    .time-col { background-color: #fcd5b4; font-weight: bold; text-align: center; vertical-align: middle; }
+                    .driver-name { text-decoration: underline; font-weight: bold; color: #000000; }
+                    .passenger-name { color: #333333; }
+                    .unassigned-passenger { color: #c00000; font-style: italic; font-weight: bold; }
+                    div { margin-bottom: 4px; }
+                </style>
+            `;
+
+            const htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset='utf-8'><title>Cuadrante Turnos</title>${styles}</head>
+                <body>${tableElement.outerHTML}</body></html>
+            `;
+
+            const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Carpool_Semanal_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.doc`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showToast('¡Horario exportado a Word con éxito!');
+        });
+
+        renderTeachers();
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (savedSchedules && savedSchedules.length > 0) {
+                const latestSchedule = savedSchedules[0];
+                document.getElementById('group-title-input').value = latestSchedule.title;
+                renderMatrixUI(latestSchedule.matrixData);
+            }
+        });
+    </script>
+</body>
+</html>
