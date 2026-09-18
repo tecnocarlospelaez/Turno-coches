@@ -6,6 +6,8 @@
     <title>TURNO PROFES GINER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Librería SheetJS para importar/exportar Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -45,7 +47,7 @@
 
     <header class="bg-white shadow-sm border-b border-slate-200 z-10 relative flex-shrink-0">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-col gap-2">
-            <!-- Fila Superior: Logotipo y Título de la App + Botones Principales Desktop -->
+            <!-- Fila Superior: Logotipo y Botones Principales Desktop -->
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600 flex items-center justify-center">
@@ -65,6 +67,14 @@
                     <button id="generate-schedule-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Calcular</span>
                     </button>
+                    <!-- Nuevos Botones de Excel -->
+                    <button id="import-excel-btn" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap" title="Importar desde Excel">
+                        <i class="fa-solid fa-upload"></i>
+                    </button>
+                    <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap" title="Exportar a Excel">
+                        <i class="fa-solid fa-file-excel"></i> <span>Excel</span>
+                    </button>
+                    <!-- Fin Nuevos Botones -->
                     <button id="export-jpg-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap hidden">
                         <i class="fa-solid fa-camera"></i> <span>JPG</span>
                     </button>
@@ -84,7 +94,7 @@
 
             <!-- Fila Inferior: Campo de Texto del Nombre a Ancho Completo + Botones Móvil -->
             <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 pt-1 md:pt-0 border-t md:border-t-0 border-slate-100">
-                <div class="relative flex-1">
+                <div class="relative flex-1 w-full">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </span>
@@ -92,17 +102,25 @@
                 </div>
 
                 <!-- Barra de Botones Móvil -->
-                <div class="flex md:hidden items-center gap-1.5 overflow-x-auto pb-0.5">
-                    <button id="history-btn-mobile" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                <div class="flex md:hidden items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
+                    <button id="history-btn-mobile" class="flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span>Historial</span>
                     </button>
-                    <button id="generate-schedule-btn-mobile" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <button id="generate-schedule-btn-mobile" class="flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Calcular</span>
                     </button>
-                    <button id="export-jpg-btn-mobile" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1 whitespace-nowrap hidden">
+                    <!-- Nuevos Botones de Excel Móvil -->
+                    <button id="import-excel-btn-mobile" class="flex-none bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-upload"></i>
+                    </button>
+                    <button id="export-excel-btn-mobile" class="flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-file-excel"></i> <span>Excel</span>
+                    </button>
+                    <!-- Fin Nuevos Botones Móvil -->
+                    <button id="export-jpg-btn-mobile" class="flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1 whitespace-nowrap hidden">
                         <i class="fa-solid fa-camera"></i> <span>JPG</span>
                     </button>
-                    <button id="export-word-btn-mobile" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1 whitespace-nowrap hidden">
+                    <button id="export-word-btn-mobile" class="flex-none bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1 whitespace-nowrap hidden">
                         <i class="fa-solid fa-file-word"></i> <span>Word</span>
                     </button>
                 </div>
@@ -142,6 +160,7 @@
             </div>
         </aside>
 
+        <!-- Sección del Cuadrante -->
         <section id="schedule-section" class="flex-1 bg-slate-100 p-2 sm:p-8 overflow-y-auto overflow-x-auto relative hidden sm:block">
             <div id="schedule-wrapper" class="w-full min-w-full sm:min-w-[800px] max-w-6xl mx-auto transition-all">
                 <div id="mobile-swipe-hint" class="sm:hidden mb-2 text-center text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5 bg-indigo-50/80 border border-indigo-100 py-1.5 rounded-lg hidden">
@@ -171,7 +190,11 @@
         </section>
     </main>
 
+    <!-- Input oculto para cargar Excel -->
+    <input type="file" id="import-excel-input" accept=".xlsx, .xls" class="hidden">
+
     <div id="teacher-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+        <!-- Contenido del modal del profesor -->
         <div class="bg-white sm:rounded-2xl shadow-2xl w-full h-full sm:h-auto sm:max-w-3xl sm:max-h-[90vh] overflow-hidden flex flex-col">
             <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
                 <h3 class="font-bold text-base sm:text-lg text-slate-800 flex items-center gap-2" id="modal-title">
@@ -225,27 +248,11 @@
                                 <div>
                                     <label class="block text-[10px] sm:text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Días Preferidos</label>
                                     <div class="flex gap-1 bg-white border border-slate-300 p-1 rounded-lg">
-                                        <!-- Checkboxes para días -->
-                                        <label class="flex-1 text-center cursor-pointer relative">
-                                            <input type="checkbox" value="Lunes" class="day-checkbox sr-only group-checkbox">
-                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">L</div>
-                                        </label>
-                                        <label class="flex-1 text-center cursor-pointer relative">
-                                            <input type="checkbox" value="Martes" class="day-checkbox sr-only group-checkbox">
-                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">M</div>
-                                        </label>
-                                        <label class="flex-1 text-center cursor-pointer relative">
-                                            <input type="checkbox" value="Miércoles" class="day-checkbox sr-only group-checkbox">
-                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">X</div>
-                                        </label>
-                                        <label class="flex-1 text-center cursor-pointer relative">
-                                            <input type="checkbox" value="Jueves" class="day-checkbox sr-only group-checkbox">
-                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">J</div>
-                                        </label>
-                                        <label class="flex-1 text-center cursor-pointer relative">
-                                            <input type="checkbox" value="Viernes" class="day-checkbox sr-only group-checkbox">
-                                            <div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">V</div>
-                                        </label>
+                                        <label class="flex-1 text-center cursor-pointer relative"><input type="checkbox" value="Lunes" class="day-checkbox sr-only group-checkbox"><div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">L</div></label>
+                                        <label class="flex-1 text-center cursor-pointer relative"><input type="checkbox" value="Martes" class="day-checkbox sr-only group-checkbox"><div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">M</div></label>
+                                        <label class="flex-1 text-center cursor-pointer relative"><input type="checkbox" value="Miércoles" class="day-checkbox sr-only group-checkbox"><div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">X</div></label>
+                                        <label class="flex-1 text-center cursor-pointer relative"><input type="checkbox" value="Jueves" class="day-checkbox sr-only group-checkbox"><div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">J</div></label>
+                                        <label class="flex-1 text-center cursor-pointer relative"><input type="checkbox" value="Viernes" class="day-checkbox sr-only group-checkbox"><div class="day-checkbox-label w-full py-1 text-xs font-semibold rounded border border-transparent text-slate-600 hover:bg-slate-100">V</div></label>
                                     </div>
                                 </div>
                                 <div>
@@ -289,15 +296,12 @@
         </div>
     </div>
 
+    <!-- Modales de Historial y Confirmación (Sin cambios) -->
     <div id="history-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-box-archive text-indigo-600"></i> Turnos Archivados
-                </h3>
-                <button id="close-history-btn" class="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 w-8 h-8 flex items-center justify-center shadow-sm">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i class="fa-solid fa-box-archive text-indigo-600"></i> Turnos Archivados</h3>
+                <button id="close-history-btn" class="text-slate-400 hover:text-red-500 transition-colors bg-white rounded-full p-1 w-8 h-8 flex items-center justify-center shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-4 overflow-y-auto flex-1 custom-scrollbar space-y-2 bg-slate-100" id="history-list"></div>
         </div>
@@ -322,15 +326,10 @@
     <script>
         const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
         
-        // Tramos definidos (Recreo unificado con el resto)
         const timeSlots = [
-            '8.15 - 9.15',
-            '9.15 - 10.15',
-            '10.15 - 11.15',
-            '11.15 - 11.45', // Recreo tratado como un turno normal
-            '11.45 - 12.45',
-            '12.45 - 13.45',
-            '13.45 - 14.45'
+            '8.15 - 9.15', '9.15 - 10.15', '10.15 - 11.15',
+            '11.15 - 11.45', // Recreo
+            '11.45 - 12.45', '12.45 - 13.45', '13.45 - 14.45'
         ];
         
         let teachers = JSON.parse(localStorage.getItem('carpool_teachers_v5')) || [];
@@ -349,10 +348,6 @@
         const carDetailsContainer = document.getElementById('car-details-container');
         const exportableMatrix = document.getElementById('exportable-matrix');
         const emptyScheduleMsg = document.getElementById('empty-schedule-msg');
-        const exportJpgBtn = document.getElementById('export-jpg-btn');
-        const exportWordBtn = document.getElementById('export-word-btn');
-        const historyModal = document.getElementById('history-modal');
-        const historyList = document.getElementById('history-list');
 
         const setExportButtonsVisibility = (show) => {
             const jpgBtns = document.querySelectorAll('#export-jpg-btn, #export-jpg-btn-mobile');
@@ -371,10 +366,7 @@
             document.getElementById('toast-container').appendChild(toast);
             
             setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 10);
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
         };
 
         function showCustomConfirm(title, text, onConfirm) {
@@ -430,8 +422,6 @@
 
         function openModal(teacherId = null) {
             buildScheduleGrid();
-            
-            // Limpiar checkboxes
             document.querySelectorAll('.group-checkbox').forEach(cb => cb.checked = false);
 
             const companionSelect = document.getElementById('teacher-pref-companion');
@@ -531,85 +521,6 @@
             showToast('Perfil guardado correctamente');
         });
 
-        document.getElementById('history-btn').addEventListener('click', () => {
-            renderHistory();
-            historyModal.classList.remove('hidden');
-            historyModal.classList.add('flex');
-        });
-        document.getElementById('close-history-btn').addEventListener('click', () => {
-            historyModal.classList.add('hidden');
-            historyModal.classList.remove('flex');
-        });
-
-        function renderHistory() {
-            historyList.innerHTML = '';
-            if (savedSchedules.length === 0) {
-                historyList.innerHTML = `<div class="text-center text-slate-400 py-10">No hay turnos archivados aún</div>`;
-                return;
-            }
-            savedSchedules.forEach(schedule => {
-                const div = document.createElement('div');
-                div.className = 'flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 hover:shadow-sm transition-all group';
-                div.innerHTML = `
-                    <div class="flex-1 cursor-pointer overflow-hidden" onclick="loadArchivedSchedule('${schedule.id}')">
-                        <h4 class="font-semibold text-slate-700 text-sm truncate" title="${schedule.title}">${schedule.title}</h4>
-                        <span class="text-xs text-slate-400"><i class="fa-regular fa-clock"></i> ${schedule.date}</span>
-                    </div>
-                    <button onclick="deleteArchivedSchedule('${schedule.id}')" class="text-slate-300 hover:text-red-500 p-2 rounded hover:bg-red-50 transition-colors ml-2"><i class="fa-solid fa-trash"></i></button>
-                `;
-                historyList.appendChild(div);
-            });
-        }
-
-        window.loadArchivedSchedule = function(id) {
-            const schedule = savedSchedules.find(s => s.id === id);
-            if (schedule) {
-                currentScheduleId = id;
-                document.getElementById('group-title-input').value = schedule.title;
-                renderMatrixUI(schedule.matrixData);
-                historyModal.classList.add('hidden');
-                historyModal.classList.remove('flex');
-                showToast(`Cargado: ${schedule.title}`, 'info');
-                if (window.innerWidth < 640 && document.getElementById('mobile-tab-schedule')) {
-                    document.getElementById('mobile-tab-schedule').click();
-                }
-            }
-        };
-
-        window.deleteArchivedSchedule = function(id) {
-            showCustomConfirm('Borrar del historial', '¿Quieres eliminar permanentemente este turno guardado?', () => {
-                savedSchedules = savedSchedules.filter(s => s.id !== id);
-                localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
-                renderHistory();
-                showToast('Turno eliminado del historial');
-            });
-        };
-
-        const mobileTabTeachers = document.getElementById('mobile-tab-teachers');
-        const mobileTabSchedule = document.getElementById('mobile-tab-schedule');
-        const asidePanel = document.getElementById('aside-panel');
-        const scheduleSection = document.getElementById('schedule-section');
-
-        if (mobileTabTeachers && mobileTabSchedule) {
-            mobileTabTeachers.addEventListener('click', () => {
-                asidePanel.classList.remove('hidden');
-                scheduleSection.classList.add('hidden');
-                scheduleSection.classList.remove('block');
-                mobileTabTeachers.className = "flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5";
-                mobileTabSchedule.className = "flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5";
-            });
-
-            mobileTabSchedule.addEventListener('click', () => {
-                asidePanel.classList.add('hidden');
-                scheduleSection.classList.remove('hidden');
-                scheduleSection.classList.add('block');
-                mobileTabSchedule.className = "flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5";
-                mobileTabTeachers.className = "flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5";
-            });
-        }
-
-        document.getElementById('clear-data-btn-desktop')?.addEventListener('click', () => document.getElementById('clear-data-btn').click());
-
         function renderTeachers() {
             teachersListEl.innerHTML = '';
             teacherCountEl.innerText = teachers.length;
@@ -681,6 +592,119 @@
             });
         });
 
+        function exportToExcel() {
+            if (teachers.length === 0) return showToast('No hay profesores para exportar', 'error');
+
+            showToast('Generando Excel...', 'info');
+
+            // 1. Aplanar los datos complejos de los profesores a un formato de tabla
+            const flatData = teachers.map(t => {
+                const row = {
+                    "ID (No Modificar)": t.id,
+                    "Nombre": t.name,
+                    "Participa Activo": t.isActive === false ? "No" : "Sí",
+                    "Tiene Coche": t.hasCar ? "Sí" : "No",
+                    "Modelo Coche": t.carModel || "",
+                    "Plazas Libres": t.seats || 3,
+                    "Compañero Preferente (ID)": t.preferredCompanion || "",
+                    "Días Preferidos": (t.preferredDays || []).join(", ")
+                };
+
+                // Añadir Horarios
+                daysOfWeek.forEach(day => {
+                    row[`Entrada ${day}`] = t.schedule?.[day]?.entrada || "";
+                    row[`Salida ${day}`] = t.schedule?.[day]?.salida || "";
+                });
+
+                return row;
+            });
+
+            // 2. Crear Libro de Trabajo (Workbook) y Hoja (Worksheet)
+            const worksheet = XLSX.utils.json_to_sheet(flatData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Plantilla Profesores");
+
+            // 3. Descargar el archivo
+            const dateStr = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+            XLSX.writeFile(workbook, `Plantilla_Profesores_${dateStr}.xlsx`);
+            showToast('¡Plantilla exportada a Excel!');
+        }
+
+        function triggerExcelImport() {
+            document.getElementById('import-excel-input').click();
+        }
+
+        document.getElementById('import-excel-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showCustomConfirm('Importar Plantilla', 'Se van a añadir/actualizar los profesores desde el archivo Excel. ¿Deseas continuar?', () => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const data = event.target.result;
+                        const workbook = XLSX.read(data, { type: 'binary' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // Convertir la hoja a JSON
+                        const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+
+                        // Mapear de vuelta al formato complejo
+                        let importedCount = 0;
+                        jsonRows.forEach(row => {
+                            if (!row["Nombre"]) return; // Saltar filas inválidas
+
+                            const tData = {
+                                id: row["ID (No Modificar)"] || ('t_' + Date.now() + Math.random().toString(36).substring(7)),
+                                name: row["Nombre"],
+                                isActive: row["Participa Activo"] === "Sí" || row["Participa Activo"] === true || row["Participa Activo"] === "Si",
+                                hasCar: row["Tiene Coche"] === "Sí" || row["Tiene Coche"] === true || row["Tiene Coche"] === "Si",
+                                carModel: row["Modelo Coche"] || "",
+                                seats: parseInt(row["Plazas Libres"]) || 3,
+                                preferredCompanion: row["Compañero Preferente (ID)"] || "",
+                                preferredDays: row["Días Preferidos"] ? row["Días Preferidos"].split(",").map(s => s.trim()).filter(s => s) : [],
+                                schedule: {}
+                            };
+
+                            daysOfWeek.forEach(day => {
+                                tData.schedule[day] = {
+                                    entrada: row[`Entrada ${day}`] || "",
+                                    salida: row[`Salida ${day}`] || ""
+                                };
+                            });
+
+                            // Actualizar o Añadir
+                            const existingIndex = teachers.findIndex(t => t.id === tData.id);
+                            if (existingIndex >= 0) {
+                                teachers[existingIndex] = tData;
+                            } else {
+                                teachers.push(tData);
+                            }
+                            importedCount++;
+                        });
+
+                        saveTeachers();
+                        renderTeachers();
+                        document.getElementById('import-excel-input').value = ''; // Resetear input
+                        showToast(`¡Se han importado ${importedCount} profesores con éxito!`);
+                    } catch (error) {
+                        console.error(error);
+                        showToast('Error al leer el archivo Excel', 'error');
+                    }
+                };
+                reader.readAsBinaryString(file);
+            });
+        });
+
+        // Eventos para botones Excel
+        document.getElementById('export-excel-btn').addEventListener('click', exportToExcel);
+        document.getElementById('import-excel-btn').addEventListener('click', triggerExcelImport);
+        
+        document.getElementById('export-excel-btn-mobile')?.addEventListener('click', exportToExcel);
+        document.getElementById('import-excel-btn-mobile')?.addEventListener('click', triggerExcelImport);
+
+
         function generateSchedule() {
             const activeTeachers = teachers.filter(t => t.isActive !== false);
             if (activeTeachers.length === 0) return showToast('Añade o activa profesores para calcular', 'error');
@@ -706,7 +730,7 @@
                 });
             });
 
-            // PRIORIDAD 2: Días Preferidos marcados en el perfil de cada docente
+            // PRIORIDAD 2: Días Preferidos
             potentialDrivers.forEach(driver => {
                 if (driver.preferredDays && Array.isArray(driver.preferredDays)) {
                     driver.preferredDays.forEach(prefDay => {
@@ -721,7 +745,7 @@
                 }
             });
 
-            // PRIORIDAD 3: Rescate de Plazas (Si faltan plazas en un tramo)
+            // PRIORIDAD 3: Rescate de Plazas
             daysOfWeek.forEach(day => {
                 let capacityDeficit = true;
                 let rescueAttempts = 0;
@@ -747,7 +771,6 @@
                                 );
                                 
                                 if (carOwnersStandingBy.length > 0) {
-                                    // Priorizar a quien prefiera este día, y de forma secundaria a quien lleve menos días
                                     carOwnersStandingBy.sort((a, b) => {
                                         const aPref = a.preferredDays && a.preferredDays.includes(day) ? 1 : 0;
                                         const bPref = b.preferredDays && b.preferredDays.includes(day) ? 1 : 0;
@@ -766,7 +789,7 @@
                 }
             });
 
-            // PRIORIDAD 4: Relleno Rotativo de días restantes hasta el límite de 2 días
+            // PRIORIDAD 4: Relleno Rotativo
             let dayQueue = [...daysOfWeek, ...daysOfWeek, ...daysOfWeek];
             let dayIdx = 0;
 
@@ -787,7 +810,6 @@
 
             // FASE DE DISTRIBUCIÓN
             let matrixData = { entrada: {}, salida: {} };
-            let globalUnassignedCount = 0;
             
             timeSlots.forEach(slot => {
                 matrixData.entrada[slot] = {};
@@ -815,7 +837,6 @@
 
                         let unassignedPassengers = [];
 
-                        // Asignación de Compañeros Preferidos
                         passengers.forEach(p => {
                             let assigned = false;
                             let preferredCar = slotCars.find(c => c.driverId === p.preferredCompanion && c.passengers.length < c.capacity);
@@ -828,7 +849,6 @@
                             if (!assigned) unassignedPassengers.push(p);
                         });
 
-                        // Reparto Equitativo Restante
                         unassignedPassengers.forEach(p => {
                             slotCars.sort((a, b) => a.passengers.length - b.passengers.length);
                             let carWithSpace = slotCars.find(c => c.passengers.length < c.capacity);
@@ -867,8 +887,6 @@
             renderMatrixUI(matrixData);
             renderTeachers(); 
             showToast('Cuadrante calculado con éxito');
-            
-            if (window.innerWidth < 640 && mobileTabSchedule) mobileTabSchedule.click();
         }
 
         function renderMatrixUI(data) {
@@ -915,7 +933,6 @@
                 }).join('');
             };
 
-            // Todas las franjas horarias procesadas de la misma manera (incluido el Recreo)
             timeSlots.forEach(slot => {
                 html += `<tr><td class="time-col font-medium">${slot}</td>`;
                 daysOfWeek.forEach(day => { html += `<td>${renderCell(data.entrada[slot][day], 'entrada', slot, day)}</td>`; });
@@ -950,7 +967,6 @@
         window.toggleRole = function(type, slot, day, carIndex, personName) {
             if (!generatedMatrix) return;
 
-            // Identificar el coche afectado
             const targetCars = generatedMatrix[type] && generatedMatrix[type][slot] && generatedMatrix[type][slot][day];
             if (!targetCars || !targetCars[carIndex]) return;
 
@@ -961,7 +977,6 @@
             let oldDriverName = targetCar.driver;
 
             if (isDriver) {
-                // El conductor cede el volante: se busca un sustituto entre los pasajeros del coche que tenga vehículo
                 if (targetCar.passengers && targetCar.passengers.length > 0) {
                     const passengerWithCar = targetCar.passengers.find(pName => {
                         const t = teachers.find(teacher => teacher.name === pName);
@@ -972,7 +987,6 @@
                     newDriverName = null;
                 }
             } else {
-                // Un pasajero pasa a ser el conductor
                 newDriverName = personName;
             }
 
@@ -1003,12 +1017,7 @@
                                 const overflow = remainingPassengers.slice(car.capacity);
 
                                 if (overflow.length > 0) {
-                                    cars.push({
-                                        driver: null,
-                                        driverId: null,
-                                        capacity: 0,
-                                        passengers: overflow
-                                    });
+                                    cars.push({ driver: null, driverId: null, capacity: 0, passengers: overflow });
                                 }
                             } else {
                                 car.driver = null;
@@ -1019,7 +1028,6 @@
                         }
                     });
 
-                    // Regla de reacomodo: añadir a los profesores sin vehículo a otros coches con plazas libres en ese tramo
                     let activeCars = cars.filter(c => c.driver !== null);
                     let unassignedGroups = cars.filter(c => c.driver === null);
 
@@ -1036,10 +1044,8 @@
                             activeCars.sort((a, b) => a.passengers.length - b.passengers.length);
                             let availableCar = activeCars.find(c => c.passengers.length < c.capacity);
 
-                            if (availableCar) {
-                                if (!availableCar.passengers.includes(person)) {
-                                    availableCar.passengers.push(person);
-                                }
+                            if (availableCar && !availableCar.passengers.includes(person)) {
+                                availableCar.passengers.push(person);
                             } else {
                                 remainingStranded.push(person);
                             }
@@ -1047,12 +1053,7 @@
 
                         let newCarsList = [...activeCars];
                         if (remainingStranded.length > 0) {
-                            newCarsList.push({
-                                driver: null,
-                                driverId: null,
-                                capacity: 0,
-                                passengers: remainingStranded
-                            });
+                            newCarsList.push({ driver: null, driverId: null, capacity: 0, passengers: remainingStranded });
                         }
                         generatedMatrix[t][s][day] = newCarsList;
                     } else {
@@ -1075,17 +1076,63 @@
             }
         };
 
-        // Guardar también si cambian manualmente el título del turno
         document.getElementById('group-title-input').addEventListener('change', window.updateActiveScheduleInHistory);
-
         document.getElementById('generate-schedule-btn').addEventListener('click', generateSchedule);
+        
+        // Historial
+        document.getElementById('history-btn').addEventListener('click', () => {
+            renderHistory();
+            document.getElementById('history-modal').classList.remove('hidden');
+            document.getElementById('history-modal').classList.add('flex');
+        });
+        document.getElementById('close-history-btn').addEventListener('click', () => {
+            document.getElementById('history-modal').classList.add('hidden');
+            document.getElementById('history-modal').classList.remove('flex');
+        });
 
-        // Enlaces de eventos para botones móviles
-        document.getElementById('history-btn-mobile')?.addEventListener('click', () => document.getElementById('history-btn').click());
-        document.getElementById('generate-schedule-btn-mobile')?.addEventListener('click', () => document.getElementById('generate-schedule-btn').click());
-        document.getElementById('export-jpg-btn-mobile')?.addEventListener('click', () => document.getElementById('export-jpg-btn').click());
-        document.getElementById('export-word-btn-mobile')?.addEventListener('click', () => document.getElementById('export-word-btn').click());
+        function renderHistory() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            if (savedSchedules.length === 0) {
+                historyList.innerHTML = `<div class="text-center text-slate-400 py-10">No hay turnos archivados aún</div>`;
+                return;
+            }
+            savedSchedules.forEach(schedule => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 hover:shadow-sm transition-all group';
+                div.innerHTML = `
+                    <div class="flex-1 cursor-pointer overflow-hidden" onclick="loadArchivedSchedule('${schedule.id}')">
+                        <h4 class="font-semibold text-slate-700 text-sm truncate" title="${schedule.title}">${schedule.title}</h4>
+                        <span class="text-xs text-slate-400"><i class="fa-regular fa-clock"></i> ${schedule.date}</span>
+                    </div>
+                    <button onclick="deleteArchivedSchedule('${schedule.id}')" class="text-slate-300 hover:text-red-500 p-2 rounded hover:bg-red-50 transition-colors ml-2"><i class="fa-solid fa-trash"></i></button>
+                `;
+                historyList.appendChild(div);
+            });
+        }
 
+        window.loadArchivedSchedule = function(id) {
+            const schedule = savedSchedules.find(s => s.id === id);
+            if (schedule) {
+                currentScheduleId = id;
+                document.getElementById('group-title-input').value = schedule.title;
+                renderMatrixUI(schedule.matrixData);
+                document.getElementById('history-modal').classList.add('hidden');
+                document.getElementById('history-modal').classList.remove('flex');
+                showToast(`Cargado: ${schedule.title}`, 'info');
+            }
+        };
+
+        window.deleteArchivedSchedule = function(id) {
+            showCustomConfirm('Borrar del historial', '¿Quieres eliminar permanentemente este turno guardado?', () => {
+                savedSchedules = savedSchedules.filter(s => s.id !== id);
+                localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
+                renderHistory();
+                showToast('Turno eliminado del historial');
+            });
+        };
+
+        // Exportar a JPG
         exportJpgBtn.addEventListener('click', async () => {
             const tableElement = document.getElementById('capture-table');
             if (!tableElement) return;
@@ -1093,7 +1140,6 @@
             const wrapper = document.getElementById('exportable-matrix');
             const originalStyle = wrapper.style.cssText;
             
-            // Forzamos un ancho comprimido para que la foto quede cuadrada y no estirada
             wrapper.style.width = '750px'; 
             wrapper.style.minWidth = '750px'; 
             wrapper.style.padding = '0'; 
@@ -1116,7 +1162,8 @@
             }
         });
 
-        exportWordBtn.addEventListener('click', () => {
+        // Exportar a Word
+        document.getElementById('export-word-btn').addEventListener('click', () => {
             const tableElement = document.getElementById('capture-table');
             if (!tableElement) return;
             showToast('Generando documento Word...', 'info');
@@ -1137,12 +1184,7 @@
                 </style>
             `;
 
-            const htmlContent = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                <head><meta charset='utf-8'><title>Cuadrante Turnos</title>${styles}</head>
-                <body>${tableElement.outerHTML}</body></html>
-            `;
-
+            const htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Cuadrante Turnos</title>${styles}</head><body>${tableElement.outerHTML}</body></html>`;
             const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -1152,9 +1194,39 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            
             showToast('¡Horario exportado a Word con éxito!');
         });
+
+        // Eventos Mobile
+        document.getElementById('history-btn-mobile')?.addEventListener('click', () => document.getElementById('history-btn').click());
+        document.getElementById('generate-schedule-btn-mobile')?.addEventListener('click', () => document.getElementById('generate-schedule-btn').click());
+        document.getElementById('export-jpg-btn-mobile')?.addEventListener('click', () => document.getElementById('export-jpg-btn').click());
+        document.getElementById('export-word-btn-mobile')?.addEventListener('click', () => document.getElementById('export-word-btn').click());
+        document.getElementById('clear-data-btn-desktop')?.addEventListener('click', () => document.getElementById('clear-data-btn').click());
+
+        // Pestañas móviles
+        const mobileTabTeachers = document.getElementById('mobile-tab-teachers');
+        const mobileTabSchedule = document.getElementById('mobile-tab-schedule');
+        const asidePanel = document.getElementById('aside-panel');
+        const scheduleSection = document.getElementById('schedule-section');
+
+        if (mobileTabTeachers && mobileTabSchedule) {
+            mobileTabTeachers.addEventListener('click', () => {
+                asidePanel.classList.remove('hidden');
+                scheduleSection.classList.add('hidden');
+                scheduleSection.classList.remove('block');
+                mobileTabTeachers.className = "flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5";
+                mobileTabSchedule.className = "flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5";
+            });
+
+            mobileTabSchedule.addEventListener('click', () => {
+                asidePanel.classList.add('hidden');
+                scheduleSection.classList.remove('hidden');
+                scheduleSection.classList.add('block');
+                mobileTabSchedule.className = "flex-1 py-2 text-center font-medium text-xs text-indigo-600 border-b-2 border-indigo-600 flex justify-center items-center gap-1.5";
+                mobileTabTeachers.className = "flex-1 py-2 text-center font-medium text-xs text-slate-500 border-b-2 border-transparent flex justify-center items-center gap-1.5";
+            });
+        }
 
         renderTeachers();
 
