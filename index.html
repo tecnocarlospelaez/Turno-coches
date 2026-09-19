@@ -64,6 +64,9 @@
                     <button id="history-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap" title="Ver turnos archivados">
                         <i class="fa-solid fa-clock-rotate-left"></i> <span>Historial</span>
                     </button>
+                    <button id="save-schedule-btn" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap" title="Guardar estado actual o crear copia si cambias el nombre">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>Guardar</span>
+                    </button>
                     <button id="generate-schedule-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Calcular</span>
                     </button>
@@ -105,6 +108,9 @@
                 <div class="flex md:hidden items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
                     <button id="history-btn-mobile" class="flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span>Historial</span>
+                    </button>
+                    <button id="save-schedule-btn-mobile" class="flex-none bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-floppy-disk"></i> <span>Guardar</span>
                     </button>
                     <button id="generate-schedule-btn-mobile" class="flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Calcular</span>
@@ -317,6 +323,55 @@
             <div class="flex gap-2 justify-center">
                 <button id="confirm-modal-cancel" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">Cancelar</button>
                 <button id="confirm-modal-ok" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Cambio de Rol -->
+    <div id="role-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[75] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-5">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-retweet text-indigo-500"></i> Cambiar Rol
+                </h3>
+                <button onclick="closeRoleModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-600 mb-4">Selecciona el nuevo estado para <strong id="role-modal-name" class="text-slate-800 text-sm"></strong>:</p>
+            <div class="flex flex-col gap-2.5">
+                <button onclick="setRole('driver')" class="w-full text-left px-4 py-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl transition-all shadow-sm flex items-center gap-3 group">
+                    <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors"><i class="fa-solid fa-users fa-fw"></i></div>
+                    <div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-indigo-800">Conductor (Normal)</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Lleva coche y acepta pasajeros.</div>
+                    </div>
+                </button>
+                <button onclick="setRole('solo')" class="w-full text-left px-4 py-3 bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl transition-all shadow-sm flex items-center gap-3 group">
+                    <div class="bg-amber-100 text-amber-600 p-2 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-colors"><i class="fa-solid fa-user-shield fa-fw"></i></div>
+                    <div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-amber-800">Conductor (Viaja solo)</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Lleva coche pero sin pasajeros.</div>
+                    </div>
+                </button>
+                <button onclick="setRole('passenger')" class="w-full text-left px-4 py-3 bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl transition-all shadow-sm flex items-center gap-3 group">
+                    <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-colors"><i class="fa-solid fa-briefcase fa-fw"></i></div>
+                    <div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-emerald-800">Pasajero</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Viaja en el coche de otro compañero.</div>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- NUEVA SECCIÓN: Mover a un coche específico -->
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <p class="text-xs text-slate-600 mb-2 font-semibold">O asignar a un coche específico:</p>
+                <div class="flex gap-2">
+                    <select id="role-modal-driver-select" class="flex-1 border border-slate-300 rounded-lg px-2 py-2 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 bg-slate-50 hover:bg-white transition-colors">
+                        <!-- Generado dinámicamente por JS -->
+                    </select>
+                    <button onclick="movePassengerToTarget()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Mover
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -832,7 +887,7 @@
                         let passengers = peopleInSlot.filter(t => !driversToday.includes(t.id));
 
                         let slotCars = availableDriversInSlot.map(d => ({
-                            driver: d.name, driverId: d.id, capacity: Number(d.seats || 3), passengers: [], prefCompanion: d.preferredCompanion
+                            driver: d.name, driverId: d.id, capacity: Number(d.seats || 3), passengers: [], prefCompanion: d.preferredCompanion, isSolo: false
                         }));
 
                         let unassignedPassengers = [];
@@ -894,6 +949,26 @@
             let globalUnassignedCount = 0;
             const groupTitle = document.getElementById('group-title-input').value || 'Turno: Sin Título';
             
+            // Pre-calcular en qué días conduce cada profesor cronológicamente (Lunes -> Viernes)
+            const driverDaysSequence = {};
+            daysOfWeek.forEach(d => {
+                let driversOnDay = new Set();
+                ['entrada', 'salida'].forEach(type => {
+                    timeSlots.forEach(slot => {
+                        const cars = data[type][slot][d];
+                        if (cars) {
+                            cars.forEach(c => {
+                                if (c.driver) driversOnDay.add(c.driver);
+                            });
+                        }
+                    });
+                });
+                driversOnDay.forEach(driver => {
+                    if (!driverDaysSequence[driver]) driverDaysSequence[driver] = [];
+                    driverDaysSequence[driver].push(d);
+                });
+            });
+
             let html = `
                 <table class="matrix-table" id="capture-table">
                     <thead>
@@ -916,19 +991,31 @@
                 return cars.map((car, carIndex) => {
                     if (car.driver) {
                         const safeDriver = car.driver.replace(/'/g, "\\'");
-                        let paxHtml = car.passengers.map(p => {
-                            const safeP = p.replace(/'/g, "\\'");
-                            return `<span class="passenger-name cursor-pointer hover:text-indigo-600 hover:underline transition-colors" onclick="toggleRole('${type}', '${slot}', '${day}', ${carIndex}, '${safeP}')" title="Click para hacer conductor">${p}</span>`;
-                        }).join(', ');
-                        let paxStr = car.passengers.length > 0 ? `: ${paxHtml}` : '';
-                        return `<div class="mb-1"><span class="driver-name cursor-pointer hover:text-indigo-600 hover:underline transition-colors" onclick="toggleRole('${type}', '${slot}', '${day}', ${carIndex}, '${safeDriver}')" title="Click para hacer pasajero">${car.driver}</span>${paxStr}</div>`;
+                        let paxStr = '';
+                        let soloBadge = car.isSolo ? `<span class="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded ml-1 font-bold inline-flex items-center gap-1 shadow-sm border border-amber-200" title="Viaja sin pasajeros"><i class="fa-solid fa-user-shield"></i> Solo</span>` : '';
+                        
+                        const daysDriven = driverDaysSequence[car.driver] || [];
+                        const dayIndex = daysDriven.indexOf(day);
+                        const ordinal = dayIndex >= 0 ? `${dayIndex + 1}º` : '';
+                        const totalDays = daysDriven.length;
+                        
+                        const supHtml = ordinal ? `<sup class="text-indigo-700 font-extrabold ml-0.5 text-[11px]" title="Día de conducción ${ordinal} de ${totalDays} en la semana">${ordinal}</sup>` : '';
+                        
+                        if (!car.isSolo && car.passengers && car.passengers.length > 0) {
+                            let paxHtml = car.passengers.map(p => {
+                                const safeP = p.replace(/'/g, "\\'");
+                                return `<span class="passenger-name cursor-pointer hover:text-indigo-600 hover:underline transition-colors" onclick="openRoleModal('${type}', '${slot}', '${day}', ${carIndex}, '${safeP}')" title="Cambiar rol">${p}</span>`;
+                            }).join(', ');
+                            paxStr = `: ${paxHtml}`;
+                        }
+                        return `<div class="mb-1.5"><span class="driver-name cursor-pointer hover:text-indigo-600 hover:underline transition-colors" onclick="openRoleModal('${type}', '${slot}', '${day}', ${carIndex}, '${safeDriver}')" title="Cambiar rol">${car.driver}</span>${supHtml}${soloBadge}${paxStr}</div>`;
                     } else {
                         globalUnassignedCount += car.passengers.length;
                         let paxHtml = car.passengers.map(p => {
                             const safeP = p.replace(/'/g, "\\'");
-                            return `<span class="cursor-pointer hover:text-red-700 underline decoration-dashed underline-offset-2 transition-colors" onclick="toggleRole('${type}', '${slot}', '${day}', ${carIndex}, '${safeP}')" title="Click para asignar como conductor">${p}</span>`;
+                            return `<span class="cursor-pointer hover:text-red-700 underline decoration-dashed underline-offset-2 transition-colors" onclick="openRoleModal('${type}', '${slot}', '${day}', ${carIndex}, '${safeP}')" title="Cambiar rol">${p}</span>`;
                         }).join(', ');
-                        return `<div class="mb-1 unassigned-passenger"><i class="fa-solid fa-circle-exclamation mr-1"></i>Sin coche: ${paxHtml}</div>`;
+                        return `<div class="mb-1.5 unassigned-passenger"><i class="fa-solid fa-circle-exclamation mr-1"></i>Sin coche: ${paxHtml}</div>`;
                     }
                 }).join('');
             };
@@ -964,106 +1051,170 @@
             }
         }
 
-        window.toggleRole = function(type, slot, day, carIndex, personName) {
-            if (!generatedMatrix) return;
+        let currentRoleData = {};
 
-            const targetCars = generatedMatrix[type] && generatedMatrix[type][slot] && generatedMatrix[type][slot][day];
-            if (!targetCars || !targetCars[carIndex]) return;
+        window.openRoleModal = function(type, slot, day, carIndex, personName) {
+            currentRoleData = { type, slot, day, carIndex, personName };
+            document.getElementById('role-modal-name').innerText = personName;
+            
+            const carsInSlot = generatedMatrix[type][slot][day] || [];
+            const selectEl = document.getElementById('role-modal-driver-select');
+            selectEl.innerHTML = '<option value="">-- Selecciona conductor --</option>';
+            selectEl.innerHTML += '<option value="unassigned">❌ Sin coche (Desasignar)</option>';
 
-            const targetCar = targetCars[carIndex];
-            const isDriver = (targetCar.driver === personName);
-
-            let newDriverName = null;
-            let oldDriverName = targetCar.driver;
-
-            if (isDriver) {
-                if (targetCar.passengers && targetCar.passengers.length > 0) {
-                    const passengerWithCar = targetCar.passengers.find(pName => {
-                        const t = teachers.find(teacher => teacher.name === pName);
-                        return t && t.hasCar;
-                    });
-                    newDriverName = passengerWithCar || null;
-                } else {
-                    newDriverName = null;
+            carsInSlot.forEach((car, i) => {
+                if (car.driver && car.driver !== personName) {
+                    const paxCount = car.passengers ? car.passengers.length : 0;
+                    const spaceLeft = car.capacity - paxCount;
+                    const spaceText = spaceLeft > 0 ? `${spaceLeft} libres` : (spaceLeft === 0 ? 'Lleno' : 'Excedido');
+                    const isSoloText = car.isSolo ? ' [Solo]' : '';
+                    selectEl.innerHTML += `<option value="${i}">🚗 ${car.driver}${isSoloText} (${spaceText})</option>`;
                 }
-            } else {
-                newDriverName = personName;
+            });
+
+            const modal = document.getElementById('role-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeRoleModal = function() {
+            const modal = document.getElementById('role-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.setRole = function(newRole) {
+            if (!generatedMatrix) return;
+            
+            const { type, slot, day, carIndex, personName } = currentRoleData;
+            const targetCars = generatedMatrix[type][slot][day];
+            if (!targetCars || !targetCars[carIndex]) {
+                closeRoleModal();
+                return;
+            }
+            
+            const targetCar = targetCars[carIndex];
+            
+            // 1. Extraer a la persona de su ubicación actual
+            if (targetCar.driver === personName) {
+                targetCar.driver = null;
+                targetCar.driverId = null;
+                targetCar.isSolo = false;
+            } else if (targetCar.passengers) {
+                targetCar.passengers = targetCar.passengers.filter(p => p !== personName);
+            }
+            
+            // 2. Aplicar el nuevo rol
+            const teacherObj = teachers.find(t => t.name === personName);
+            const capacity = teacherObj ? Number(teacherObj.seats || 3) : 3;
+            const driverId = teacherObj ? teacherObj.id : ('manual_' + personName);
+
+            if (newRole === 'driver') {
+                targetCars.push({ driver: personName, driverId, capacity, passengers: [], isSolo: false });
+            } else if (newRole === 'solo') {
+                targetCars.push({ driver: personName, driverId, capacity: 0, passengers: [], isSolo: true });
+            } else if (newRole === 'passenger') {
+                targetCars.push({ driver: null, driverId: null, capacity: 0, passengers: [personName] });
+            }
+            
+            // 3. Rebalancear la celda
+            rebalanceCars(targetCars);
+            
+            renderMatrixUI(generatedMatrix);
+            window.updateActiveScheduleInHistory();
+            closeRoleModal();
+        };
+
+        function rebalanceCars(cars) {
+            let unassigned = [];
+            let validCars = [];
+
+            // Recolectar pasajeros y separar coches
+            cars.forEach(c => {
+                if (c.driver) {
+                    if (c.isSolo) {
+                        if (c.passengers && c.passengers.length > 0) {
+                            unassigned.push(...c.passengers);
+                        }
+                        c.passengers = [];
+                    } else if (c.passengers && c.passengers.length > c.capacity) {
+                        unassigned.push(...c.passengers.slice(c.capacity));
+                        c.passengers = c.passengers.slice(0, c.capacity);
+                    }
+                    validCars.push(c);
+                } else {
+                    if (c.passengers) unassigned.push(...c.passengers);
+                }
+            });
+
+            unassigned = [...new Set(unassigned)];
+
+            // Reubicar no asignados de forma óptima
+            let remainingUnassigned = [];
+            unassigned.forEach(p => {
+                validCars.sort((a, b) => (a.passengers?.length || 0) - (b.passengers?.length || 0));
+                let availableCar = validCars.find(c => !c.isSolo && (c.passengers?.length || 0) < c.capacity);
+                
+                if (availableCar) {
+                    if (!availableCar.passengers) availableCar.passengers = [];
+                    if (!availableCar.passengers.includes(p)) {
+                        availableCar.passengers.push(p);
+                    }
+                } else {
+                    remainingUnassigned.push(p);
+                }
+            });
+
+            if (remainingUnassigned.length > 0) {
+                validCars.push({ driver: null, driverId: null, capacity: 0, passengers: remainingUnassigned });
             }
 
-            ['entrada', 'salida'].forEach(t => {
-                timeSlots.forEach(s => {
-                    const cars = generatedMatrix[t] && generatedMatrix[t][s] && generatedMatrix[t][s][day];
-                    if (!cars || cars.length === 0) return;
+            // Actualizar array original
+            cars.length = 0;
+            cars.push(...validCars.filter(c => c.driver !== null || (c.passengers && c.passengers.length > 0)));
+        }
 
-                    cars.forEach(car => {
-                        const belongsToGroup = (oldDriverName && car.driver === oldDriverName) ||
-                                               (car.driver === personName) ||
-                                               (car.passengers && (car.passengers.includes(personName) || (oldDriverName && car.passengers.includes(oldDriverName))));
+        window.movePassengerToTarget = function() {
+            if (!generatedMatrix) return;
+            const selectEl = document.getElementById('role-modal-driver-select');
+            const targetIndex = selectEl.value;
 
-                        if (belongsToGroup) {
-                            let allPeople = [];
-                            if (car.driver) allPeople.push(car.driver);
-                            if (car.passengers) allPeople.push(...car.passengers);
-                            allPeople = [...new Set(allPeople)];
+            if (targetIndex === "") return; // No hay acción seleccionada
 
-                            if (newDriverName && allPeople.includes(newDriverName)) {
-                                const teacherObj = teachers.find(t => t.name === newDriverName);
-                                car.driver = newDriverName;
-                                car.driverId = teacherObj ? teacherObj.id : ('manual_' + newDriverName);
-                                car.capacity = teacherObj ? Number(teacherObj.seats || 3) : 3;
+            const { type, slot, day, carIndex, personName } = currentRoleData;
+            const carsInSlot = generatedMatrix[type][slot][day];
+            const sourceCar = carsInSlot[carIndex];
 
-                                const remainingPassengers = allPeople.filter(p => p !== newDriverName);
-                                car.passengers = remainingPassengers.slice(0, car.capacity);
-                                const overflow = remainingPassengers.slice(car.capacity);
+            // 1. Quitar al pasajero (o conductor) de su ubicación actual
+            if (sourceCar.driver === personName) {
+                sourceCar.driver = null;
+                sourceCar.driverId = null;
+                sourceCar.isSolo = false;
+            } else if (sourceCar.passengers) {
+                sourceCar.passengers = sourceCar.passengers.filter(p => p !== personName);
+            }
 
-                                if (overflow.length > 0) {
-                                    cars.push({ driver: null, driverId: null, capacity: 0, passengers: overflow });
-                                }
-                            } else {
-                                car.driver = null;
-                                car.driverId = null;
-                                car.capacity = 0;
-                                car.passengers = allPeople;
-                            }
-                        }
-                    });
+            // 2. Mover al coche de destino
+            if (targetIndex === "unassigned") {
+                let unassignedCar = carsInSlot.find(c => !c.driver);
+                if (!unassignedCar) {
+                    unassignedCar = { driver: null, driverId: null, capacity: 0, passengers: [] };
+                    carsInSlot.push(unassignedCar);
+                }
+                unassignedCar.passengers.push(personName);
+            } else {
+                const targetCar = carsInSlot[parseInt(targetIndex)];
+                if (!targetCar.passengers) targetCar.passengers = [];
+                targetCar.passengers.push(personName);
+            }
 
-                    let activeCars = cars.filter(c => c.driver !== null);
-                    let unassignedGroups = cars.filter(c => c.driver === null);
-
-                    if (unassignedGroups.length > 0 && activeCars.length > 0) {
-                        let strandedPeople = [];
-                        unassignedGroups.forEach(ug => {
-                            if (ug.passengers) strandedPeople.push(...ug.passengers);
-                        });
-                        strandedPeople = [...new Set(strandedPeople)];
-
-                        let remainingStranded = [];
-
-                        strandedPeople.forEach(person => {
-                            activeCars.sort((a, b) => a.passengers.length - b.passengers.length);
-                            let availableCar = activeCars.find(c => c.passengers.length < c.capacity);
-
-                            if (availableCar && !availableCar.passengers.includes(person)) {
-                                availableCar.passengers.push(person);
-                            } else {
-                                remainingStranded.push(person);
-                            }
-                        });
-
-                        let newCarsList = [...activeCars];
-                        if (remainingStranded.length > 0) {
-                            newCarsList.push({ driver: null, driverId: null, capacity: 0, passengers: remainingStranded });
-                        }
-                        generatedMatrix[t][s][day] = newCarsList;
-                    } else {
-                        generatedMatrix[t][s][day] = cars.filter(c => c.driver !== null || (c.passengers && c.passengers.length > 0));
-                    }
-                });
-            });
+            // 3. Limpiar coches que se hayan quedado completamente vacíos (sin conductor y sin pasajeros)
+            generatedMatrix[type][slot][day] = carsInSlot.filter(c => c.driver !== null || (c.passengers && c.passengers.length > 0));
 
             renderMatrixUI(generatedMatrix);
             window.updateActiveScheduleInHistory();
+            closeRoleModal();
+            showToast('Asignación manual actualizada');
         };
 
         window.updateActiveScheduleInHistory = function() {
@@ -1079,6 +1230,51 @@
         document.getElementById('group-title-input').addEventListener('change', window.updateActiveScheduleInHistory);
         document.getElementById('generate-schedule-btn').addEventListener('click', generateSchedule);
         
+        // Acción de guardado manual explícito
+        const saveManualAction = () => {
+            if (!generatedMatrix) return showToast('No hay cuadrante generado para guardar', 'error');
+            
+            const titleInput = document.getElementById('group-title-input');
+            let title = titleInput.value.trim() || `Turno ${new Date().toLocaleDateString('es-ES')}`;
+            titleInput.value = title;
+
+            // Comprobar si existe por título para sobrescribir o crear nuevo
+            const existingIndex = savedSchedules.findIndex(s => s.title.toLowerCase() === title.toLowerCase());
+            
+            let targetId = currentScheduleId;
+            if (existingIndex >= 0) {
+                targetId = savedSchedules[existingIndex].id;
+            } else {
+                // Si el título es nuevo, creamos un ID nuevo para guardarlo como copia independiente
+                targetId = Date.now().toString();
+            }
+
+            const newSchedule = {
+                id: targetId,
+                title: title,
+                date: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
+                matrixData: JSON.parse(JSON.stringify(generatedMatrix))
+            };
+
+            if (existingIndex >= 0) {
+                savedSchedules[existingIndex] = newSchedule; // Sobrescribe
+            } else {
+                savedSchedules.unshift(newSchedule); // Añade como nuevo
+            }
+            
+            currentScheduleId = targetId; // Actualiza el contexto actual
+            localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
+            
+            // Actualizar la vista del historial por si estaba abierta
+            if (!document.getElementById('history-modal').classList.contains('hidden')) {
+                renderHistory();
+            }
+            
+            showToast('Cuadrante guardado en el historial');
+        };
+
+        document.getElementById('save-schedule-btn')?.addEventListener('click', saveManualAction);
+
         // Historial
         document.getElementById('history-btn').addEventListener('click', () => {
             renderHistory();
@@ -1133,7 +1329,7 @@
         };
 
         // Exportar a JPG
-        exportJpgBtn.addEventListener('click', async () => {
+        document.getElementById('export-jpg-btn').addEventListener('click', async () => {
             const tableElement = document.getElementById('capture-table');
             if (!tableElement) return;
 
@@ -1178,6 +1374,7 @@
                     .matrix-title-row { background-color: #fcd5b4; text-align: center; font-weight: bold; font-size: 14px; }
                     .time-col { background-color: #fcd5b4; font-weight: bold; text-align: center; vertical-align: middle; }
                     .driver-name { text-decoration: underline; font-weight: bold; color: #000000; }
+                    sup { font-weight: bold; color: #4338ca; font-size: 9px; }
                     .passenger-name { color: #333333; }
                     .unassigned-passenger { color: #c00000; font-style: italic; font-weight: bold; }
                     div { margin-bottom: 4px; }
@@ -1199,6 +1396,7 @@
 
         // Eventos Mobile
         document.getElementById('history-btn-mobile')?.addEventListener('click', () => document.getElementById('history-btn').click());
+        document.getElementById('save-schedule-btn-mobile')?.addEventListener('click', () => document.getElementById('save-schedule-btn').click());
         document.getElementById('generate-schedule-btn-mobile')?.addEventListener('click', () => document.getElementById('generate-schedule-btn').click());
         document.getElementById('export-jpg-btn-mobile')?.addEventListener('click', () => document.getElementById('export-jpg-btn').click());
         document.getElementById('export-word-btn-mobile')?.addEventListener('click', () => document.getElementById('export-word-btn').click());
