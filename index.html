@@ -764,161 +764,190 @@
             const activeTeachers = teachers.filter(t => t.isActive !== false);
             if (activeTeachers.length === 0) return showToast('Añade o activa profesores para calcular', 'error');
 
-            driverAssignments = {};
-            let driverScheduleByDay = { 'Lunes': [], 'Martes': [], 'Miércoles': [], 'Jueves': [], 'Viernes': [] };
-            let potentialDrivers = activeTeachers.filter(t => t.hasCar);
-            potentialDrivers.forEach(t => driverAssignments[t.id] = 0);
+            let bestMatrixData = null;
+            let bestUnassignedCount = Infinity;
+            let bestDriverAssignments = null;
+            const maxIterations = 50; // Calculamos 50 variaciones aleatorias para encontrar la óptima
 
-            // PRIORIDAD 1: Aislamiento (Solos)
-            daysOfWeek.forEach(day => {
-                ['entrada', 'salida'].forEach(type => {
-                    timeSlots.forEach(slot => {
-                        let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
-                        if (peopleInSlot.length === 1) {
-                            let loneTeacher = peopleInSlot[0];
-                            if (loneTeacher.hasCar && !driverScheduleByDay[day].includes(loneTeacher.id) && (driverAssignments[loneTeacher.id] || 0) < 2) {
-                                driverScheduleByDay[day].push(loneTeacher.id);
-                                driverAssignments[loneTeacher.id] = (driverAssignments[loneTeacher.id] || 0) + 1;
-                            }
-                        }
-                    });
-                });
-            });
+            for (let iter = 0; iter < maxIterations; iter++) {
+                let tempDriverAssignments = {};
+                let driverScheduleByDay = { 'Lunes': [], 'Martes': [], 'Miércoles': [], 'Jueves': [], 'Viernes': [] };
+                
+                // Orden aleatorio para asegurar diferentes resultados en cada clic y evitar sesgos
+                let potentialDrivers = [...activeTeachers.filter(t => t.hasCar)].sort(() => Math.random() - 0.5);
+                potentialDrivers.forEach(t => tempDriverAssignments[t.id] = 0);
 
-            // PRIORIDAD 2: Días Preferidos
-            potentialDrivers.forEach(driver => {
-                if (driver.preferredDays && Array.isArray(driver.preferredDays)) {
-                    driver.preferredDays.forEach(prefDay => {
-                        if ((driverAssignments[driver.id] || 0) < 2) {
-                            const travelsOnPrefDay = driver.schedule[prefDay] && (driver.schedule[prefDay].entrada || driver.schedule[prefDay].salida);
-                            if (travelsOnPrefDay && !driverScheduleByDay[prefDay].includes(driver.id)) {
-                                driverScheduleByDay[prefDay].push(driver.id);
-                                driverAssignments[driver.id] = (driverAssignments[driver.id] || 0) + 1;
-                            }
-                        }
-                    });
-                }
-            });
-
-            // PRIORIDAD 3: Rescate de Plazas
-            daysOfWeek.forEach(day => {
-                let capacityDeficit = true;
-                let rescueAttempts = 0;
-
-                while (capacityDeficit && rescueAttempts < 10) {
-                    capacityDeficit = false;
-                    rescueAttempts++;
-
+                // PRIORIDAD 1: Aislamiento (Solos)
+                daysOfWeek.forEach(day => {
                     ['entrada', 'salida'].forEach(type => {
                         timeSlots.forEach(slot => {
                             let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
-                            if (peopleInSlot.length === 0) return;
-
-                            let currentDrivers = peopleInSlot.filter(t => driverScheduleByDay[day].includes(t.id));
-                            let availableSeats = currentDrivers.reduce((sum, d) => sum + Number(d.seats || 3), 0);
-                            let passengersCount = peopleInSlot.length - currentDrivers.length;
-
-                            if (passengersCount > availableSeats) {
-                                let carOwnersStandingBy = peopleInSlot.filter(t => 
-                                    t.hasCar && 
-                                    !driverScheduleByDay[day].includes(t.id) &&
-                                    (driverAssignments[t.id] || 0) < 2 
-                                );
-                                
-                                if (carOwnersStandingBy.length > 0) {
-                                    carOwnersStandingBy.sort((a, b) => {
-                                        const aPref = a.preferredDays && a.preferredDays.includes(day) ? 1 : 0;
-                                        const bPref = b.preferredDays && b.preferredDays.includes(day) ? 1 : 0;
-                                        if (aPref !== bPref) return bPref - aPref;
-                                        return (driverAssignments[a.id] || 0) - (driverAssignments[b.id] || 0);
-                                    });
-
-                                    let rescuedDriver = carOwnersStandingBy[0];
-                                    driverScheduleByDay[day].push(rescuedDriver.id);
-                                    driverAssignments[rescuedDriver.id] = (driverAssignments[rescuedDriver.id] || 0) + 1;
-                                    capacityDeficit = true; 
+                            if (peopleInSlot.length === 1) {
+                                let loneTeacher = peopleInSlot[0];
+                                if (loneTeacher.hasCar && !driverScheduleByDay[day].includes(loneTeacher.id) && (tempDriverAssignments[loneTeacher.id] || 0) < 2) {
+                                    driverScheduleByDay[day].push(loneTeacher.id);
+                                    tempDriverAssignments[loneTeacher.id] = (tempDriverAssignments[loneTeacher.id] || 0) + 1;
                                 }
                             }
                         });
                     });
-                }
-            });
-
-            // PRIORIDAD 4: Relleno Rotativo
-            let dayQueue = [...daysOfWeek, ...daysOfWeek, ...daysOfWeek];
-            let dayIdx = 0;
-
-            potentialDrivers.forEach(driver => {
-                let attempts = 0;
-                while ((driverAssignments[driver.id] || 0) < 2 && attempts < 30) {
-                    let d = dayQueue[dayIdx % dayQueue.length];
-                    if (driver.schedule[d] && (driver.schedule[d].entrada || driver.schedule[d].salida)) {
-                        if (!driverScheduleByDay[d].includes(driver.id)) {
-                            driverScheduleByDay[d].push(driver.id);
-                            driverAssignments[driver.id] = (driverAssignments[driver.id] || 0) + 1;
-                        }
-                    }
-                    dayIdx++;
-                    attempts++;
-                }
-            });
-
-            // FASE DE DISTRIBUCIÓN
-            let matrixData = { entrada: {}, salida: {} };
-            
-            timeSlots.forEach(slot => {
-                matrixData.entrada[slot] = {};
-                matrixData.salida[slot] = {};
-                daysOfWeek.forEach(day => {
-                    matrixData.entrada[slot][day] = [];
-                    matrixData.salida[slot][day] = [];
                 });
-            });
 
-            daysOfWeek.forEach(day => {
-                const driversToday = driverScheduleByDay[day]; 
-
-                const distributeSlot = (type) => {
-                    timeSlots.forEach(slot => {
-                        let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
-                        if (peopleInSlot.length === 0) return;
-
-                        let availableDriversInSlot = peopleInSlot.filter(t => driversToday.includes(t.id));
-                        let passengers = peopleInSlot.filter(t => !driversToday.includes(t.id));
-
-                        let slotCars = availableDriversInSlot.map(d => ({
-                            driver: d.name, driverId: d.id, capacity: Number(d.seats || 3), passengers: [], prefCompanion: d.preferredCompanion, isSolo: false
-                        }));
-
-                        let unassignedPassengers = [];
-
-                        passengers.forEach(p => {
-                            let assigned = false;
-                            let preferredCar = slotCars.find(c => c.driverId === p.preferredCompanion && c.passengers.length < c.capacity);
-                            if (!preferredCar) preferredCar = slotCars.find(c => c.prefCompanion === p.id && c.passengers.length < c.capacity);
-
-                            if (preferredCar) {
-                                preferredCar.passengers.push(p.name);
-                                assigned = true;
-                            }
-                            if (!assigned) unassignedPassengers.push(p);
-                        });
-
-                        unassignedPassengers.forEach(p => {
-                            slotCars.sort((a, b) => a.passengers.length - b.passengers.length);
-                            let carWithSpace = slotCars.find(c => c.passengers.length < c.capacity);
-                            if (carWithSpace) {
-                                carWithSpace.passengers.push(p.name);
-                            } else {
-                                slotCars.push({ driver: null, driverId: null, capacity: 0, passengers: [p.name] });
+                // PRIORIDAD 2: Días Preferidos
+                potentialDrivers.forEach(driver => {
+                    if (driver.preferredDays && Array.isArray(driver.preferredDays)) {
+                        let shuffledPref = [...driver.preferredDays].sort(() => Math.random() - 0.5);
+                        shuffledPref.forEach(prefDay => {
+                            if ((tempDriverAssignments[driver.id] || 0) < 2) {
+                                const travelsOnPrefDay = driver.schedule[prefDay] && (driver.schedule[prefDay].entrada || driver.schedule[prefDay].salida);
+                                if (travelsOnPrefDay && !driverScheduleByDay[prefDay].includes(driver.id)) {
+                                    driverScheduleByDay[prefDay].push(driver.id);
+                                    tempDriverAssignments[driver.id] = (tempDriverAssignments[driver.id] || 0) + 1;
+                                }
                             }
                         });
-                        matrixData[type][slot][day] = slotCars;
+                    }
+                });
+
+                // PRIORIDAD 3: Rescate de Plazas (aleatorizado)
+                let daysShuffled = [...daysOfWeek].sort(() => Math.random() - 0.5);
+                daysShuffled.forEach(day => {
+                    let capacityDeficit = true;
+                    let rescueAttempts = 0;
+
+                    while (capacityDeficit && rescueAttempts < 15) {
+                        capacityDeficit = false;
+                        rescueAttempts++;
+
+                        let types = ['entrada', 'salida'].sort(() => Math.random() - 0.5);
+                        types.forEach(type => {
+                            let slots = [...timeSlots].sort(() => Math.random() - 0.5);
+                            slots.forEach(slot => {
+                                let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
+                                if (peopleInSlot.length === 0) return;
+
+                                let currentDrivers = peopleInSlot.filter(t => driverScheduleByDay[day].includes(t.id));
+                                let availableSeats = currentDrivers.reduce((sum, d) => sum + Number(d.seats || 3), 0);
+                                let passengersCount = peopleInSlot.length - currentDrivers.length;
+
+                                if (passengersCount > availableSeats) {
+                                    let carOwnersStandingBy = peopleInSlot.filter(t => 
+                                        t.hasCar && 
+                                        !driverScheduleByDay[day].includes(t.id) &&
+                                        (tempDriverAssignments[t.id] || 0) < 2 
+                                    );
+                                    
+                                    if (carOwnersStandingBy.length > 0) {
+                                        carOwnersStandingBy.sort((a, b) => {
+                                            const aPref = a.preferredDays && a.preferredDays.includes(day) ? 1 : 0;
+                                            const bPref = b.preferredDays && b.preferredDays.includes(day) ? 1 : 0;
+                                            if (aPref !== bPref) return bPref - aPref;
+                                            if (tempDriverAssignments[a.id] !== tempDriverAssignments[b.id]) return (tempDriverAssignments[a.id] || 0) - (tempDriverAssignments[b.id] || 0);
+                                            return Math.random() - 0.5; // Desempate aleatorio para explorar más combinaciones
+                                        });
+
+                                        let rescuedDriver = carOwnersStandingBy[0];
+                                        driverScheduleByDay[day].push(rescuedDriver.id);
+                                        tempDriverAssignments[rescuedDriver.id] = (tempDriverAssignments[rescuedDriver.id] || 0) + 1;
+                                        capacityDeficit = true; 
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+
+                // PRIORIDAD 4: Relleno Rotativo Aleatorio
+                let dayQueue = [...daysOfWeek].sort(() => Math.random() - 0.5);
+                let dayIdx = 0;
+
+                potentialDrivers.forEach(driver => {
+                    let attempts = 0;
+                    while ((tempDriverAssignments[driver.id] || 0) < 2 && attempts < 15) {
+                        let d = dayQueue[dayIdx % dayQueue.length];
+                        if (driver.schedule[d] && (driver.schedule[d].entrada || driver.schedule[d].salida)) {
+                            if (!driverScheduleByDay[d].includes(driver.id)) {
+                                driverScheduleByDay[d].push(driver.id);
+                                tempDriverAssignments[driver.id] = (tempDriverAssignments[driver.id] || 0) + 1;
+                            }
+                        }
+                        dayIdx++;
+                        attempts++;
+                    }
+                });
+
+                // FASE DE DISTRIBUCIÓN
+                let tempMatrixData = { entrada: {}, salida: {} };
+                let unassignedCount = 0;
+                
+                timeSlots.forEach(slot => {
+                    tempMatrixData.entrada[slot] = {};
+                    tempMatrixData.salida[slot] = {};
+                    daysOfWeek.forEach(day => {
+                        tempMatrixData.entrada[slot][day] = [];
+                        tempMatrixData.salida[slot][day] = [];
                     });
-                };
-                distributeSlot('entrada');
-                distributeSlot('salida');
-            });
+                });
+
+                daysOfWeek.forEach(day => {
+                    const driversToday = driverScheduleByDay[day]; 
+
+                    const distributeSlot = (type) => {
+                        timeSlots.forEach(slot => {
+                            let peopleInSlot = activeTeachers.filter(t => t.schedule[day] && t.schedule[day][type] === slot);
+                            if (peopleInSlot.length === 0) return;
+
+                            let availableDriversInSlot = peopleInSlot.filter(t => driversToday.includes(t.id));
+                            let passengers = [...peopleInSlot.filter(t => !driversToday.includes(t.id))].sort(() => Math.random() - 0.5); // Variedad en el reparto de plazas
+
+                            let slotCars = availableDriversInSlot.map(d => ({
+                                driver: d.name, driverId: d.id, capacity: Number(d.seats || 3), passengers: [], prefCompanion: d.preferredCompanion, isSolo: false
+                            }));
+
+                            let unassignedPassengers = [];
+
+                            passengers.forEach(p => {
+                                let assigned = false;
+                                let preferredCar = slotCars.find(c => c.driverId === p.preferredCompanion && c.passengers.length < c.capacity);
+                                if (!preferredCar) preferredCar = slotCars.find(c => c.prefCompanion === p.id && c.passengers.length < c.capacity);
+
+                                if (preferredCar) {
+                                    preferredCar.passengers.push(p.name);
+                                    assigned = true;
+                                }
+                                if (!assigned) unassignedPassengers.push(p);
+                            });
+
+                            unassignedPassengers.forEach(p => {
+                                slotCars.sort((a, b) => a.passengers.length - b.passengers.length);
+                                let carWithSpace = slotCars.find(c => c.passengers.length < c.capacity);
+                                if (carWithSpace) {
+                                    carWithSpace.passengers.push(p.name);
+                                } else {
+                                    slotCars.push({ driver: null, driverId: null, capacity: 0, passengers: [p.name] });
+                                    unassignedCount++;
+                                }
+                            });
+                            tempMatrixData[type][slot][day] = slotCars;
+                        });
+                    };
+                    distributeSlot('entrada');
+                    distributeSlot('salida');
+                });
+
+                // Evaluamos si este intento es mejor (menos gente sin coche) que los anteriores
+                if (unassignedCount < bestUnassignedCount) {
+                    bestUnassignedCount = unassignedCount;
+                    bestMatrixData = tempMatrixData;
+                    bestDriverAssignments = tempDriverAssignments;
+                }
+
+                // Si encontramos un reparto perfecto (0 faltas), rompemos el bucle para ahorrar rendimiento
+                if (bestUnassignedCount === 0) break;
+            }
+
+            // Aplicamos la mejor iteración encontrada tras las múltiples simulaciones
+            driverAssignments = bestDriverAssignments;
 
             // Archivar Turno
             const titleInput = document.getElementById('group-title-input');
@@ -930,7 +959,7 @@
                 id: existingIndex >= 0 ? savedSchedules[existingIndex].id : Date.now().toString(),
                 title: title,
                 date: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
-                matrixData: matrixData
+                matrixData: bestMatrixData
             };
             currentScheduleId = newSchedule.id;
             
@@ -939,9 +968,14 @@
             
             localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
 
-            renderMatrixUI(matrixData);
+            renderMatrixUI(bestMatrixData);
             renderTeachers(); 
-            showToast('Cuadrante calculado con éxito');
+            
+            if (bestUnassignedCount === 0) {
+                showToast('¡Cuadrante perfecto calculado (Sin déficit)!');
+            } else {
+                showToast(`Calculado: Óptimo encontrado (${bestUnassignedCount} sin plaza)`);
+            }
         }
 
         function renderMatrixUI(data) {
@@ -1224,10 +1258,19 @@
                 savedSchedules[index].matrixData = generatedMatrix;
                 savedSchedules[index].title = document.getElementById('group-title-input').value.trim();
                 localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
+                
+                // Sincronizar el nombre con el encabezado del cuadrante en tiempo real
+                const titleCell = document.querySelector('.matrix-title-row');
+                if (titleCell) titleCell.innerText = savedSchedules[index].title;
             }
         };
 
         document.getElementById('group-title-input').addEventListener('change', window.updateActiveScheduleInHistory);
+        // Evento 'input' para que el nombre del cuadrante se actualice al instante mientras escribes
+        document.getElementById('group-title-input').addEventListener('input', () => {
+            const titleCell = document.querySelector('.matrix-title-row');
+            if (titleCell) titleCell.innerText = document.getElementById('group-title-input').value.trim();
+        });
         document.getElementById('generate-schedule-btn').addEventListener('click', generateSchedule);
         
         // Acción de guardado manual explícito
@@ -1265,6 +1308,9 @@
             currentScheduleId = targetId; // Actualiza el contexto actual
             localStorage.setItem('carpool_schedules_history_v2', JSON.stringify(savedSchedules));
             
+            // Re-renderizar el cuadrante para asegurar que quede plasmado el nombre
+            renderMatrixUI(generatedMatrix);
+
             // Actualizar la vista del historial por si estaba abierta
             if (!document.getElementById('history-modal').classList.contains('hidden')) {
                 renderHistory();
